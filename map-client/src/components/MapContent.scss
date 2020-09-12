@@ -1,0 +1,43 @@
+.active-custom-icon {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+
+  border-radius: 50%;
+  border: 10px solid rgb(34, 139, 34);
+  width: 10px;
+  height: 10px;
+}
+
+.active-custom-icon::after {
+  position: absolute;
+  content: '';
+  width: 0px;
+  height: 0px;
+  bottom: -30px;
+  left: -6px;
+  border: 10px solid transparent;
+  border-top: 17px solid rgb(34, 139, 34);
+}
+
+.inactive-custom-icon {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+
+  border-radius: 50%;
+  border: 10px solid #FF0000;;
+  width: 10px;
+  height: 10px;
+}
+
+.inactive-custom-icon::after {
+  position: absolute;
+  content: '';
+  width: 0px;
+  height: 0px;
+  bottom: -30px;
+  left: -6px;
+  border: 10px solid transparent;
+  border-top: 17px solid #FF0000;;
+}

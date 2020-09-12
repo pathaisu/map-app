@@ -1,0 +1,4 @@
+/map-client/node_modules
+/map-db-mongo
+/map-mqtt/node_modules
+/map-server/node_modules

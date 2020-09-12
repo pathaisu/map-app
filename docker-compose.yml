@@ -1,0 +1,50 @@
+version: '3'
+services:
+  # website:
+  #   image: node:14
+  #   volumes:
+  #     - ./map-server:/usr/src/app
+  #   working_dir: /usr/src/app
+  #   command: npm run dev
+  #   ports:
+  #     - 3002:3002
+  #   links:
+  #     - mongo
+  #   depends_on:
+  #     - mongo
+
+  # MQTT
+  # mqtt:
+  #   build: ./map-mqtt
+  #   volumes:
+  #     - ./map-mqtt:/usr/src/app
+  #   ports:
+  #     - "3003:3003"
+  #   links:
+  #     - mongo
+  #   depends_on:
+  #     - mongo
+  #   environment:
+  #     WAIT_HOSTS: mongo:27017
+
+  # API
+  api:
+    build: ./map-server
+    volumes:
+      - ./map-server:/usr/src/app
+    ports:
+      - "3002:3002"
+    links:
+      - mongo
+    depends_on:
+      - mongo
+    environment:
+      WAIT_HOSTS: mongo:27017
+  
+  # MongoDB sidecar.
+  mongo:
+    image: mongo
+    volumes:
+      - ./map-db-mongo/data-volume:/data/db
+    ports:
+      - "27017:27017"
