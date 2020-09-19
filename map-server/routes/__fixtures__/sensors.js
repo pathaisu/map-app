@@ -1,16 +1,3 @@
-export const mockArea = {
-  data: {
-    name: 'Main area',
-    zoom: 13,
-    lat: 19.769025,
-    lng: 19.769025,
-    profile: {
-      province: 'Chiang Mai',
-      country: 'Thailand',
-    }
-  }
-};
-
 /**
  * id: 000 - 005 (000 will be gw)
  * lat: 19.769025
