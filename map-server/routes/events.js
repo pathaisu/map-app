@@ -15,17 +15,18 @@ const getEvents = async (req, res) => {
 
 const alarmEventProducer = async (req, res) => {
   // Get mongo client from req.app.locals
-  const { collectionEvents } = req.app.locals;
+  const { collectionEvents, collectionSensors } = req.app.locals;
 
   const sensor = JSON.parse(JSON.stringify(req.body));
 
   const event = {
-    eventType: 'polling',
+    eventType: 'alarm',
     reason: 'routine',
-    timestamp: new Date().getTime(),
+    timestamp: `${new Date().getTime()}`,
     sensor,
   }
 
+  await collectionSensors.insertOne({ ...sensor });
   await collectionEvents.insertOne({ ...event });
 
   res.json({ result: true });
@@ -33,17 +34,18 @@ const alarmEventProducer = async (req, res) => {
 
 const pollingEventProducer = async (req, res) => {
   // Get mongo client from req.app.locals
-  const { collectionEvents } = req.app.locals;
+  const { collectionEvents, collectionSensors } = req.app.locals;
 
   const sensor = JSON.parse(JSON.stringify(req.body));
 
   const event = {
     eventType: 'polling',
     reason: 'routine',
-    timestamp: new Date().getTime(),
+    timestamp: `${new Date().getTime()}`,
     sensor,
   }
 
+  await collectionSensors.insertOne({ ...sensor });
   await collectionEvents.insertOne({ ...event });
 
   res.json({ result: true });
