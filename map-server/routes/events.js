@@ -13,16 +13,35 @@ const getEvents = async (req, res) => {
   res.json(result);
 }
 
-const pollingEventProducer = async (req, res) => {
+const alarmEventProducer = async (req, res) => {
   // Get mongo client from req.app.locals
   const { collectionEvents } = req.app.locals;
 
-  const sensors = JSON.parse(JSON.stringify(req.body));
+  const sensor = JSON.parse(JSON.stringify(req.body));
+
   const event = {
     eventType: 'polling',
     reason: 'routine',
     timestamp: new Date().getTime(),
-    sensors,
+    sensor,
+  }
+
+  await collectionEvents.insertOne({ ...event });
+
+  res.json({ result: true });
+}
+
+const pollingEventProducer = async (req, res) => {
+  // Get mongo client from req.app.locals
+  const { collectionEvents } = req.app.locals;
+
+  const sensor = JSON.parse(JSON.stringify(req.body));
+
+  const event = {
+    eventType: 'polling',
+    reason: 'routine',
+    timestamp: new Date().getTime(),
+    sensor,
   }
 
   await collectionEvents.insertOne({ ...event });
@@ -35,5 +54,9 @@ export default (app) => {
   app.post('/map/v1/events/polling', 
     jsonParser,
     (req, res) => pollingEventProducer(req, res),
+  );
+  app.post('/map/v1/events/alarm', 
+    jsonParser,
+    (req, res) => alarmEventProducer(req, res),
   );
 } 
