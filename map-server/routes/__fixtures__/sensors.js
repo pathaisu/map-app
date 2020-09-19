@@ -23,7 +23,7 @@ export const mockArea = {
 export const mockSensors = { 
   data: [
     {
-      id: 000,
+      id: '000',
       lat: '19.769025',
       lng: '98.949914',
       sem: 8,
@@ -32,7 +32,7 @@ export const mockSensors = {
       soc: 50,
     },
     {
-      id: 001,
+      id: '001',
       lat: '19.769025',
       lng: '98.949914',
       sem: 8,
@@ -41,7 +41,7 @@ export const mockSensors = {
       soc: 50,
     },
     {
-      id: 002,
+      id: '002',
       lat: '19.781939',
       lng: '98.945755',
       sem: 8,
@@ -50,7 +50,7 @@ export const mockSensors = {
       soc: 50,
     },
     {
-      id: 003,
+      id: '003',
       lat: '19.784711',
       lng: '98.947046',
       sem: 8,
@@ -59,7 +59,7 @@ export const mockSensors = {
       soc: 50,
     },
     {
-      id: 004,
+      id: '004',
       lat: '19.756218',
       lng: '98.953974',
       sem: 8,

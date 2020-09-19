@@ -1,5 +1,4 @@
 import bodyParser from 'body-parser';
-import { mockSensors } from './__fixtures__/sensors.js';
 
 const jsonParser = bodyParser.json();
 
