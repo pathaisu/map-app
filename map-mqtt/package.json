@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "app.js",
+  "type": "module",
   "scripts": {
     "dev": "nodemon --exec node app.js",
     "test-polling": "node utils/test polling",
@@ -15,6 +16,7 @@
     "async-mqtt": "^2.6.1",
     "dotenv": "^8.2.0",
     "node-fetch": "^2.6.0",
+    "winston": "^3.3.3",
     "ws": "^7.3.1"
   },
   "devDependencies": {

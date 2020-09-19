@@ -1,4 +1,12 @@
 /map-client/node_modules
 /map-db-mongo
+
 /map-mqtt/node_modules
+/map-mqtt/log
+
+# local env files
+/map-mqtt/.env.local
+/map-mqtt/.env.*.local
+/map-mqtt/.env
+
 /map-server/node_modules
