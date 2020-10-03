@@ -67,6 +67,9 @@ const onConnectHandler = async () => {
 	try {
     if (topic === 'polling') await client.publish(topic, JSON.stringify(data[getRandomNumber(5)]));
     if (topic === 'alarm') await client.publish(topic, JSON.stringify(data[getRandomNumber(5)]));
+    if (topic === '/gw/all') await client.publish(topic, JSON.stringify(data[getRandomNumber(5)]));
+    if (topic === '/gw/alarm') await client.publish(topic, JSON.stringify(data[getRandomNumber(5)]))
+
     await client.end();
     
 		console.log('Done test');
