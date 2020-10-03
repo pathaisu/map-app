@@ -7,8 +7,8 @@ const getEvents = async (req, res) => {
   const { collectionEvents } = req.app.locals;
 
   const result = await collectionEvents
-  .findOne({})
-  .then(result => result);
+    .findOne({})
+    .then(result => result);
 
   res.json(result);
 }
@@ -21,7 +21,7 @@ const alarmEventProducer = async (req, res) => {
 
   const event = {
     eventType: 'alarm',
-    reason: 'routine',
+    reason: 'invade',
     timestamp: `${new Date().getTime()}`,
     sensor,
   }
