@@ -1,21 +1,20 @@
 version: '3'
 services:
   # Web client
-  # website:
-  #   # image: node:14
-  #   build: ./map-client
-  #   volumes:
-  #     - ./map-client:/usr/src/app
-  #   working_dir: /usr/src/app
-  #   #command: npm run dev
-  #   ports:
-  #     - 3001:3000
-  #   links:
-  #     - api
-  #   depends_on:
-  #     - api
-  #   environment:
-  #     WAIT_HOSTS: mongo:27017
+  website:
+    build: ./map-client
+    volumes:
+      - ./map-client:/usr/src/app
+    working_dir: /usr/src/app
+    #command: npm run dev
+    ports:
+      - 3001:3000
+    links:
+      - api
+    depends_on:
+      - api
+    environment:
+      WAIT_HOSTS: mongo:27017
 
   # MQTT
   mqtt:
