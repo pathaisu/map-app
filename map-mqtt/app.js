@@ -1,6 +1,7 @@
 
 import http from 'http';
 import ws from 'ws';
+import getTime from 'date-fns/getTime/index.js'
 import 'dotenv/config.js';
 
 import { mqttClient, ALARM_TOPIC } from './utils/mqtt.js';
@@ -15,7 +16,7 @@ const onSocketConnect = (wsClient) => {
 
   wsClient.on('message', function(message) {
     wsLogger.info(JSON.stringify(message));
-    wsClient.send(JSON.stringify(message)) 
+    wsClient.send(JSON.stringify(message));
   });
 
   wsClient.on('close', () => {
@@ -24,8 +25,20 @@ const onSocketConnect = (wsClient) => {
 
   mqttClient.on('message', async (topic, message) => {    
     if (topic === ALARM_TOPIC) {
-      wsLogger.info(`[${topic}]: ${message}`);
-      wsClient.send(JSON.stringify(JSON.parse(message)));
+      const timestamp = getTime(new Date());
+  
+      const event = {
+        eventType: 'alarm',
+        reason: 'invade',
+        timestamp: `${timestamp}`,
+        sensor: {
+          ...JSON.parse(message),
+          timestamp: `${timestamp}`,
+        },
+      }
+
+      wsLogger.info(`[${topic}]: ${event}`);
+      wsClient.send(JSON.stringify(event));
     }
   });
 }
