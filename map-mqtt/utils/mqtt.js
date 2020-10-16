@@ -46,8 +46,6 @@ const onConnectHandler = async () => {
 }
 
 const onMessageHandler = async (topic, message) => {  
-  console.log('------------>', topic);
-
   if (topic === ALARM_TOPIC) {
     mqttLogger.info(`[${topic}]: ${message}`);
 
