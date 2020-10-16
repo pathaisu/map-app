@@ -1,5 +1,13 @@
-export const getData = async () => {
-  const data = await fetch('http://localhost:3002/map/v1/sensors', { 
+export const getWatcher = async () => {
+  const data = await fetch('http://localhost:3002/map/v1/watcher', { 
+    mode: 'cors' 
+  }).then(res => res.json());
+  
+  return data;
+}
+
+export const getEvents = async (timestamp) => {
+  const data = await fetch(`http://localhost:3002/map/v1/events?timestamp=${timestamp}`, { 
     mode: 'cors' 
   }).then(res => res.json());
   

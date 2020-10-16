@@ -5,15 +5,16 @@
 4. Sensor.
 
 ```js
+// Topic /gw/alarm & /gw/polling
 { 
-  status: [{
-    id: string,
-    active: boolean,
-    lat: float,
-    lng: float,
-  }],
+  "id": 0, 
+  "lat": 13.818835, 
+  "lng": 100.513596, 
+  "bat": 0, 
+  "soc": 0,
 }
 ```
+
 - status => more frequent
 - lat, lng => to save battery, it will be a bit longer to receive status
 5. Sensing feature from sensor, => web socket => PubSub with MQTT

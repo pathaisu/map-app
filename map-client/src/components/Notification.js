@@ -3,6 +3,14 @@ import styled from 'styled-components';
 
 const MainContainer = styled.div`
   display: flex;
+  flex-direction: column;
+  height: 300px;
+  overflow: auto;
+  border
+`;
+
+const ItemContainer = styled.div`
+  display: flex;
   flex-direction: row;
   justify-content: center;
   padding: 5px;
@@ -14,7 +22,7 @@ const MainContainer = styled.div`
   cursor: pointer;
 `;
 
-const Container = styled.div`
+const ContentContainer = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: 'start;
@@ -36,9 +44,27 @@ const ButtonSensor = styled.div`
 `;
 
 function Notification(props) {
+  let pollingNotifications = [];
+  let alarmNotifications = [];
+
+  if (props.notifications) {
+    console.log(props.notifications);
+
+    pollingNotifications = props.notifications.filter(notification => notification.eventType === 'polling');
+
+    alarmNotifications = props.notifications.filter(notification => notification.eventType === 'alarm');
+  }
+
+  // if (props.notifications) {
+  //   pollingNotifications = props.notifications.filter(notification => notification.eventType === 'polling');
+
+  //   alarmNotifications = props.notifications.filter(notification => notification.eventType === 'alarm');
+  // }
+
+  
   return (
-    <MainContainer>
-      <Container>
+    <div>
+      {/* <Container>
         <span>{ props.data.msg }</span>
         <span style={props.data.status ? sensorActiveStatus : sensorInActiveStatus }>
           { props.data.status ? 'Active' :  'Inactive' }
@@ -52,8 +78,34 @@ function Notification(props) {
             </span>
           </button>
         </p>
-      </ButtonSensor>
-    </MainContainer>
+      </ButtonSensor> */}
+
+      <MainContainer>
+        <h1><b>Alarm</b></h1>
+        {
+          alarmNotifications.map((value, index) => {
+            return (
+              <ItemContainer key={index}>
+                <ContentContainer>{ `${value.sensor.id} : ${value.reason}` }</ContentContainer>
+              </ItemContainer>
+            )
+          })
+        }
+      </MainContainer>
+      <br/>
+      <MainContainer>
+        <h1><b>Polling</b></h1>
+        {
+          pollingNotifications.map((value, index) => {
+            return (
+              <ItemContainer key={index}>
+                <ContentContainer>{ `${value.sensor.id} : ${value.reason}` }</ContentContainer>
+              </ItemContainer>
+            )
+          })
+        }
+      </MainContainer>
+    </div>
   );
 }
 
