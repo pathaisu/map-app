@@ -7,7 +7,8 @@ const getWatcher = async (req, res) => {
   const { collectionWatcher } = req.app.locals;
 
   const result = await collectionWatcher
-    .findOne({})
+    .find({})
+    .toArray()
     .then(result => result);
 
   res.json(result);
