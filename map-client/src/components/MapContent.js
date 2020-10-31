@@ -5,15 +5,24 @@ import './MapContent.scss';
 
 function MapContent(props) {
   const state = {
+    // Default lat, lang at Chiang mai
     lat: 19.769025,
     lng: 98.949914,
     zoom: 13,
     nodes: [],
   };
 
-  if (props.sensors) state.nodes = props.sensors; 
+  if (props.sensors) {
+    const { sensors } = props;
+    const gw = sensors.filter(sensor => sensor.id === 0);
 
-  const position = [state.lat, state.lng];
+    state.nodes = sensors; 
+
+    if (gw.length > 0) {
+      state.lat = gw[0].lat;
+      state.lng = gw[0].lng;
+    }
+  }
 
   const activeIcon = L.divIcon({
     iconSize: [30, 30],
@@ -28,7 +37,7 @@ function MapContent(props) {
 
   return (
     <div>
-      <Map center={position} zoom={state.zoom}>
+      <Map center={[state.lat, state.lng]} zoom={state.zoom}>
         <TileLayer
           url='https://{s}.tile.osm.org/{z}/{x}/{y}.png'
         />
