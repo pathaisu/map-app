@@ -5,6 +5,7 @@ import MapContent from '../components/MapContent';
 import Notification from '../components/Notification';
 import { getWatcher, getEvents } from '../apis/httpRequest';
 
+const POLLING_TIME = 30000;
 
 const Container = styled.div`
   display: flex;
@@ -29,13 +30,6 @@ const MapContainer = styled.div`
 const ActivityContainer = styled.div`
   display: block;
   height: 300px;
-  // border: 1px solid #000;
-`;
-
-const FalseAlarmContainer = styled.div`
-  display: block;
-  height: 100%;
-  // border: 1px solid #000;
 `;
 
 const setPinActiveStatus = (data) => {
@@ -54,18 +48,13 @@ const setPinInActiveStatus = (sensors, notifications) => {
     if (sensorIds.includes(sensor.id)) sensor.active = false;
     return sensor;
   });
-  
-  // return data.map(sensor => {
-  //   return Object.assign(sensor, {
-  //     active: true,
-  //   });
-  // });
 }
 
 class MapPage extends Component {
-  state = {}
   socket = new WebSocket("ws://localhost:3003");
-  notifications = []
+  state = {};
+  notifications = [];
+  queryTime = '';
   
   setStateAsync(state) {
     return new Promise((resolve) => {
@@ -73,83 +62,45 @@ class MapPage extends Component {
     });
   }
 
-  // async getPositions() {
-  //   const { data } = await getData();
-
-  //   const inactiveSensors = data.filter(item => {
-  //     return item.active === false
-  //   }).map(item => {
-  //     return item.id
-  //   })
-
-  //   const activeStatus = (inactiveSensors.length === 0);
-  //   const msgStatus = activeStatus ? 'All Sensors' : `Sensor id [${inactiveSensors.join()}]`
-
-  //   this.notifications.unshift({ 
-  //     msg: msgStatus, 
-  //     status: activeStatus 
-  //   });
-
-  //   await this.setStateAsync({ sensors: data })
-  // }
-
   async pollingEvents() {
-    // const data = await getEvents('1602330528431');
-    // const result = this.state.notifications.concat(data);
+    // When there is no available sensors on web
+    if (this.state.sensors.length === 0) {
+      const data = await getWatcher();
+      
+      this.setStateAsync({ sensors: setPinActiveStatus(data) });
+    }
 
-    // const sensorResult = setPinInActiveStatus(this.state.sensors, result);
+    if (!this.queryTime) {
+      this.queryTime = Date.now() - POLLING_TIME;
+    }
 
-    // await this.setStateAsync({ sensors: sensorResult });
-    // await this.setStateAsync({ notifications: result });
+    const { 
+      timestamp,
+      events,
+    } = await getEvents(this.queryTime);
+
+    const timestampList = this.state.notifications.map(notification => notification.timestamp);
+    const filteredEvent = events.filter(event => {
+      return !timestampList.includes(event.timestamp);
+    });
+
+    const result = this.state.notifications.concat(filteredEvent)
+
+    const sensorResult = setPinInActiveStatus(this.state.sensors, result);
+
+    await this.setStateAsync({ sensors: sensorResult });
+    await this.setStateAsync({ notifications: result });
+    this.queryTime = timestamp;
   }
 
   async componentDidMount() {
-    // this.socket.onopen = () => {
-    //   setInterval(() => {
-    //     const wsPayload = {
-    //       id: Math.floor(Math.random() * 4) + 1  ,
-    //       lat: '19.756218',
-    //       lng: '98.953974',
-    //       active: Math.random() >= 0.6,
-    //     };
-
-    //     this.socket.send(JSON.stringify(wsPayload));
-    //   }, 14000)
-    // }
-
     this.socket.onmessage = async (event) => {
-      // const wsPayload = JSON.parse(JSON.parse(event.data));
-    
-      // if (wsPayload.active === false) {
-      //   this.notifications.unshift({ 
-      //     msg: `Alert !!! sensor no ${wsPayload.id}`, status: false
-      //   });
-      // }
-
-      // const data = this.state.sensors.map(item => {
-      //   if (item.id === wsPayload.id) item.active = wsPayload.active;
-      //   return item
-      // });
-
       const data = [JSON.parse(event.data)];
-
       const sensorResult = setPinInActiveStatus(this.state.sensors, data);
       const result = this.state.notifications.concat(data);
 
-      console.log(result)
-
       await this.setStateAsync({ notifications: result });
       await this.setStateAsync({ sensors: sensorResult });
-
-      // data.forEach((sensor) => {
-      //   if (!sensor.active) {
-      //     this.notifications.unshift({ 
-      //       msg: `Alert !!! sensor no ${sensor.id}`, status: false
-      //     });
-      //   }
-      // });
-
-      // await this.setStateAsync({ sensors: data });
     }
 
     const data = await getWatcher();
@@ -159,7 +110,7 @@ class MapPage extends Component {
   
     setInterval(() => {
       this.pollingEvents();
-    }, 9000);
+    }, POLLING_TIME);
   }
 
   render() {
