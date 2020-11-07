@@ -1,5 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
+import { setResolveEvent } from '../apis/httpRequest';
 
 const MainContainer = styled.div`
   display: flex;
@@ -31,75 +32,131 @@ const ContentContainer = styled.div`
 
 const sensorActiveStatus = {
   color: '#228B22',
-  fontWeight: 'bold',
+  fontSize: '12px',
 }
 
-const sensorInActiveStatus = {
+const sensorAlarmInActiveStatus = {
   color: '#FF0000',
-  fontWeight: 'bold',
+  fontSize: '12px',
 }
 
-const ButtonSensor = styled.div`
-  margin-left: 30px;
-`;
+const sensorPollingInActiveStatus = {
+  color: '#FF5E13',
+  fontSize: '12px',
+}
 
 function Notification(props) {
   let pollingNotifications = [];
   let alarmNotifications = [];
 
+  const reducer = (acc, cur) => {
+    if (acc[cur.sensor.id]) {
+      acc[cur.sensor.id].push(cur);
+    } else {
+      acc[cur.sensor.id] = [cur];
+    }
+
+    return acc;
+  };
+
   if (props.notifications) {
-    console.log(props.notifications);
+    // pollingNotifications = props.notifications
+    //   .filter(notification => notification.eventType === 'polling');
 
-    pollingNotifications = props.notifications.filter(notification => notification.eventType === 'polling');
+    pollingNotifications = Object.values(props.notifications
+      .filter(notification => notification.eventType === 'polling')
+      .reduce(reducer, {}));
 
-    alarmNotifications = props.notifications.filter(notification => notification.eventType === 'alarm');
+    alarmNotifications = props.notifications
+      .filter(notification => notification.eventType === 'alarm');
   }
 
-  // if (props.notifications) {
-  //   pollingNotifications = props.notifications.filter(notification => notification.eventType === 'polling');
+  const handleClick = async (event, id) => {
+    delete event._id;
+    console.log(event);
 
-  //   alarmNotifications = props.notifications.filter(notification => notification.eventType === 'alarm');
-  // }
+    await setResolveEvent(event);
+    console.log(document.getElementById(id))
+    document.getElementById(id).style.color = '#228B22';
+  };
 
-  
   return (
     <div>
-      {/* <Container>
-        <span>{ props.data.msg }</span>
-        <span style={props.data.status ? sensorActiveStatus : sensorInActiveStatus }>
-          { props.data.status ? 'Active' :  'Inactive' }
-        </span>
-      </Container>
-      <ButtonSensor>
-        <p className="buttons">
-          <button className="button">
-            <span className="icon is-small">
-              E
-            </span>
-          </button>
-        </p>
-      </ButtonSensor> */}
-
       <MainContainer>
         <h1><b>Alarm</b></h1>
         {
           alarmNotifications.map((value, index) => {
             return (
-              <ItemContainer key={index}>
-                <ContentContainer>{ `${value.sensor.id} : ${value.reason}` }</ContentContainer>
+              <ItemContainer
+                id={ `alarm${index}`}
+                key={index}
+                style={
+                  value.status === 'not_resolve' ?  sensorAlarmInActiveStatus : sensorActiveStatus
+                }
+              >
+                <ContentContainer>
+                  { `No: ${index + 1}` }<br/>
+                  { `ID: ${value.sensor.id}` }<br/>
+                  { `reason: ${value.reason}`}<br/>
+                  { `time: ${value.timestamp}` }<br/>
+                  { `status: ${value.status}` }<br/>
+                  <button onClick={() => { handleClick(value, `alarm${index}`) }}>Resolve</button>
+                </ContentContainer>
               </ItemContainer>
             )
           })
         }
       </MainContainer>
       <br/>
+      {/* <MainContainer>
+        <h1><b>Polling</b></h1>
+        {
+          pollingNotifications.map((value, index) => {
+            return (
+              <ItemContainer
+                id={ `polling${index}`}
+                key={index}
+                style={
+                  value.status === 'not_resolve' ? sensorPollingInActiveStatus : sensorActiveStatus
+                }
+              >
+                <ContentContainer>
+                  { `No: ${index + 1}` }<br/>
+                  { `ID: ${value.sensor.id}` }<br/>
+                  { `reason: ${value.reason}`}<br/>
+                  { `time: ${value.timestamp}` }<br/>
+                  { `status: ${value.status}` }<br/>
+                  <button onClick={() => { handleClick(value, `polling${index}`) }}>Resolve</button>
+                </ContentContainer>
+              </ItemContainer>
+            )
+          })
+        }
+      </MainContainer> */}
+
       <MainContainer>
         <h1><b>Polling</b></h1>
         {
           pollingNotifications.map((value, index) => {
             return (
-              <ItemContainer key={index}>
-                <ContentContainer>{ `${value.sensor.id} : ${value.reason}` }</ContentContainer>
+              <ItemContainer
+                id={ `polling${index}`}
+                key={index}
+                style={ sensorPollingInActiveStatus }
+              >
+                <ContentContainer>
+                  { `No: ${index + 1}` }<br/>
+                  Too long since last sensor<br/>
+                  { 
+                    value.map((sensor, index) => {
+                      return (
+                        <div key={index}>
+                          {index + 1}: {sensor.timestamp}<br/>
+                        </div>
+                      )
+                    })
+                  }
+                </ContentContainer>
               </ItemContainer>
             )
           })
