@@ -5,7 +5,7 @@ import {
   COLLECTION_SENSORS,
   COLLECTION_EVENTS,
   COLLECTION_WATCHER,
-} from '../config/db.js';
+} from '../config/index.js';
 
 export const setMongo = async (app) => {
   const client = await mongodb.MongoClient

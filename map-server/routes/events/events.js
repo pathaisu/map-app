@@ -1,11 +1,10 @@
-import bodyParser from 'body-parser';
 import getTime from 'date-fns/getTime/index.js';
 import differenceInSeconds from 'date-fns/fp/differenceInSeconds/index.js';
 
-const jsonParser = bodyParser.json();
+
 const THRESHOLD = 60;
 
-const eventConsumer = async (req, res) => {
+export const eventConsumer = async (req, res) => {
   const { collectionEvents } = req.app.locals;
 
   let events = [];
@@ -31,7 +30,7 @@ const eventConsumer = async (req, res) => {
   });
 }
 
-const eventProducer = async (req, res) => {
+export const eventProducer = async (req, res) => {
   const { 
     collectionWatcher,
     collectionEvents,
@@ -74,7 +73,7 @@ const eventProducer = async (req, res) => {
   res.json({ timestamp });
 }
 
-const alarmEventProducer = async (req, res) => {
+export const alarmEventProducer = async (req, res) => {
   // Get mongo client from req.app.locals
   const { 
     collectionEvents, 
@@ -101,7 +100,7 @@ const alarmEventProducer = async (req, res) => {
   res.json(event);
 }
 
-const pollingEventProducer = async (req, res) => {
+export const pollingEventProducer = async (req, res) => {
   // Get mongo client from req.app.locals
   const { 
     collectionEvents, 
@@ -152,7 +151,7 @@ const pollingEventProducer = async (req, res) => {
   res.json({ result: true });
 }
 
-const setEventToResolve =  async (req, res) => {
+export const setEventToResolve =  async (req, res) => {
   // Get mongo client from req.app.locals
   const { 
     collectionEvents,
@@ -171,24 +170,3 @@ const setEventToResolve =  async (req, res) => {
 
   res.json({ result: true });
 }
-
-export default (app) => {
-  app.get('/map/v1/events', 
-    (req, res) => eventConsumer(req, res),
-  );
-  app.get('/map/v1/events/producer', 
-    (req, res) => eventProducer(req, res),
-  );
-  app.post('/map/v1/events/polling', 
-    jsonParser,
-    (req, res) => pollingEventProducer(req, res),
-  );
-  app.post('/map/v1/events/alarm', 
-    jsonParser,
-    (req, res) => alarmEventProducer(req, res),
-  );
-  app.post('/map/v1/events/resolve', 
-    jsonParser,
-    (req, res) => setEventToResolve(req, res),
-  );
-} 
