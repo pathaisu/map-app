@@ -1,0 +1,17 @@
+import {
+  DB_URI,
+  DB_NAME,
+  COLLECTION_SENSORS,
+  COLLECTION_EVENTS,
+  COLLECTION_WATCHER,
+} from './db.js';
+
+export {
+  DB_URI,
+  DB_NAME,
+  COLLECTION_SENSORS,
+  COLLECTION_EVENTS,
+  COLLECTION_WATCHER,
+};
+
+export const PORT = 3002;

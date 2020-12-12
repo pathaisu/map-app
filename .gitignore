@@ -10,5 +10,6 @@
 /map-mqtt/.env
 
 /map-server/node_modules
+/map-server/log
 
 /map-cron-job/node_modules

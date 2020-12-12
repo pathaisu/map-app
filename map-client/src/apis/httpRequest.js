@@ -7,7 +7,7 @@ export const getWatcher = async () => {
 }
 
 export const getEvents = async (timestamp) => {
-  const data = await fetch(`http://localhost:3002/map/v1/events?timestamp=${timestamp}`, { 
+  const data = await fetch(`http://localhost:3002/map/v1/events/consumer?timestamp=${timestamp}`, { 
     mode: 'cors' 
   }).then(res => res.json());
   
