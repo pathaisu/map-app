@@ -1,5 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
+import toDate from 'date-fns/toDate';
+import Battery from '../components/Battery';
 import { setResolveEvent } from '../apis/httpRequest';
 
 const MainContainer = styled.div`
@@ -19,7 +21,8 @@ const ItemContainer = styled.div`
   margin-top: 10px;
   background-color: #F5F5F5;
   border: 1px solid #E9EAEC;
-  box-shadow: 0 1px 6px 0 rgba(0,0,0,.4);
+  border-radius: 10px;
+  box-shadow: 0 0 1px 0 rgba(0,0,0,.4);
   cursor: pointer;
 `;
 
@@ -28,6 +31,37 @@ const ContentContainer = styled.div`
   flex-direction: column;
   justify-content: 'start;
   align-items: start;
+`;
+
+const TitleWrapper = styled.div`
+  font-weight: bold;
+  margin-bottom: 3px;
+`;
+
+const InfoWrapper = styled.div`
+  margin-bottom: 3px;
+`;
+
+const SensorStatusWrapper = styled.div`
+  display: flex;
+  flex-direction: row;
+  padding-bottom: 6px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid #CED5DB;
+`;
+
+const ResolveButton = styled.button`
+  color: #fff !important;
+  width: 100%;
+  cursor: pointer;
+  text-transform: uppercase;
+  text-decoration: none;
+  background: #555555;
+  padding: 10px;
+  border-radius: 5px;
+  display: inline-block;
+  border: none;
+  transition: all 0.4s ease 0s;
 `;
 
 const sensorActiveStatus = {
@@ -60,9 +94,6 @@ function Notification(props) {
   };
 
   if (props.notifications) {
-    // pollingNotifications = props.notifications
-    //   .filter(notification => notification.eventType === 'polling');
-
     pollingNotifications = Object.values(props.notifications
       .filter(notification => notification.eventType === 'polling')
       .reduce(reducer, {}));
@@ -73,7 +104,6 @@ function Notification(props) {
 
   const handleClick = async (event, id) => {
     delete event._id;
-    console.log(event);
 
     await setResolveEvent(event);
     console.log(document.getElementById(id))
@@ -95,12 +125,20 @@ function Notification(props) {
                 }
               >
                 <ContentContainer>
-                  { `No: ${index + 1}` }<br/>
-                  { `ID: ${value.sensor.id}` }<br/>
-                  { `reason: ${value.reason}`}<br/>
-                  { `time: ${value.timestamp}` }<br/>
-                  { `status: ${value.status}` }<br/>
-                  <button onClick={() => { handleClick(value, `alarm${index}`) }}>Resolve</button>
+                  <TitleWrapper>
+                    Sensor หมายเลข: {value.sensor.id} โดนบุกรุก
+                  </TitleWrapper>
+                  <InfoWrapper>
+                    เวลา: { toDate(Number(value.timestamp)).toLocaleString() }
+                  </InfoWrapper>
+                  <InfoWrapper>
+                    สถานะ: { value.status === 'not_resolve' ? 'ยังไม่ได้รับการตรวจสอบ' : 'ได้รับการตรวจสอบแล้ว' }
+                  </InfoWrapper>
+                  <ResolveButton 
+                    onClick={() => { handleClick(value, `alarm${index}`) }}
+                  >
+                    ทำการตรวจสอบ
+                  </ResolveButton>
                 </ContentContainer>
               </ItemContainer>
             )
@@ -108,36 +146,20 @@ function Notification(props) {
         }
       </MainContainer>
       <br/>
-      {/* <MainContainer>
-        <h1><b>Polling</b></h1>
-        {
-          pollingNotifications.map((value, index) => {
-            return (
-              <ItemContainer
-                id={ `polling${index}`}
-                key={index}
-                style={
-                  value.status === 'not_resolve' ? sensorPollingInActiveStatus : sensorActiveStatus
-                }
-              >
-                <ContentContainer>
-                  { `No: ${index + 1}` }<br/>
-                  { `ID: ${value.sensor.id}` }<br/>
-                  { `reason: ${value.reason}`}<br/>
-                  { `time: ${value.timestamp}` }<br/>
-                  { `status: ${value.status}` }<br/>
-                  <button onClick={() => { handleClick(value, `polling${index}`) }}>Resolve</button>
-                </ContentContainer>
-              </ItemContainer>
-            )
-          })
-        }
-      </MainContainer> */}
 
       <MainContainer>
         <h1><b>Polling</b></h1>
         {
           pollingNotifications.map((value, index) => {
+            const latestSensor = value[value.length - 1];
+            const latestSensorTime = toDate(Number(latestSensor.timestamp)).toLocaleString();
+            const {
+              soc = 0,
+              bat = 0,
+              sem = 0,
+              uls = 0,
+            } = latestSensor.sensor;
+
             return (
               <ItemContainer
                 id={ `polling${index}`}
@@ -145,17 +167,23 @@ function Notification(props) {
                 style={ sensorPollingInActiveStatus }
               >
                 <ContentContainer>
-                  { `No: ${index + 1}` }<br/>
-                  Too long since last sensor<br/>
-                  { 
-                    value.map((sensor, index) => {
-                      return (
-                        <div key={index}>
-                          {index + 1}: {sensor.timestamp}<br/>
-                        </div>
-                      )
-                    })
-                  }
+                  <TitleWrapper style={{ color: '#000' }}>
+                    Sensor หมายเลข: {index}
+                  </TitleWrapper>
+                  <SensorStatusWrapper style={{ color: '#000' }}>
+                    <Battery power={soc}></Battery> bat: {bat}, sem: {sem}, uls: {uls}          
+                  </SensorStatusWrapper>
+                  <TitleWrapper>
+                    จำนวนครั้งที่พบปัญหา: { value.length } ครั้ง
+                  </TitleWrapper>
+                  <InfoWrapper>
+                    เวลา: { latestSensorTime }
+                  </InfoWrapper>
+                  <ResolveButton 
+                    onClick={() => { handleClick(value, `polling${index}`) }}
+                  >
+                    ทำการตรวจสอบ
+                  </ResolveButton>
                 </ContentContainer>
               </ItemContainer>
             )
