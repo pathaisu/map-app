@@ -1,11 +1,11 @@
 
 import http from 'http';
 import ws from 'ws';
-import getTime from 'date-fns/getTime/index.js'
+import fetch from 'node-fetch';
 import 'dotenv/config.js';
 
-import { mqttClient, ALARM_TOPIC } from './utils/mqtt.js';
-import { wsLogger, appLogger } from './utils/logger.js';
+import { mqttClient, GW_ALARM_TOPIC } from './utils/mqtt.js';
+import { wsLogger, appLogger, mqttLogger } from './utils/logger.js';
 
 const wss = new ws.Server({
   noServer: true,
@@ -24,18 +24,14 @@ const onSocketConnect = (wsClient) => {
   });
 
   mqttClient.on('message', async (topic, message) => {    
-    if (topic === ALARM_TOPIC) {
-      const timestamp = getTime(new Date());
-  
-      const event = {
-        eventType: 'alarm',
-        reason: 'invade',
-        timestamp: `${timestamp}`,
-        sensor: {
-          ...JSON.parse(message),
-          timestamp: `${timestamp}`,
-        },
-      }
+    if (topic === GW_ALARM_TOPIC) {
+      mqttLogger.info(`[${topic}]: ${message}`);
+
+      const event = await fetch(`${process.env.API_URL}/map/v1/events/alarm`, {
+        method: 'post',
+        body: message,
+        headers: { 'Content-Type': 'application/json' },
+      }).then(response => response.json());
 
       wsLogger.info(`[${topic}]: ${event}`);
       wsClient.send(JSON.stringify(event));
