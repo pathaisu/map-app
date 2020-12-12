@@ -7,9 +7,13 @@ import 'dotenv/config.js';
 import { mqttClient, GW_ALARM_TOPIC } from './utils/mqtt.js';
 import { wsLogger, appLogger, mqttLogger } from './utils/logger.js';
 
+const CLIENTS = [];
+
 const wss = new ws.Server({
   noServer: true,
 });
+
+const getUid = () => Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
 
 const onSocketConnect = (wsClient) => {
   wsLogger.info('wss connected');
@@ -23,21 +27,28 @@ const onSocketConnect = (wsClient) => {
     wsLogger.info('close connection');
   });
 
-  mqttClient.on('message', async (topic, message) => {    
-    if (topic === GW_ALARM_TOPIC) {
-      mqttLogger.info(`[${topic}]: ${message}`);
+  wsClient.id = getUid();
 
-      const event = await fetch(`${process.env.API_URL}/map/v1/events/alarm`, {
-        method: 'post',
-        body: message,
-        headers: { 'Content-Type': 'application/json' },
-      }).then(response => response.json());
-
-      wsLogger.info(`[${topic}]: ${event}`);
-      wsClient.send(JSON.stringify(event));
-    }
-  });
+  CLIENTS.push(wsClient);
 }
+
+mqttClient.on('message', async (topic, message) => {   
+  if (topic === GW_ALARM_TOPIC) {
+    const event = await fetch(`${process.env.API_URL}/map/v1/events/alarm`, {
+      method: 'post',
+      body: message,
+      headers: { 'Content-Type': 'application/json' },
+    }).then(response => response.json());
+
+    wss.clients.forEach((client) => {
+      mqttLogger.info(`[${topic}]: ${message}, ${client.id}`);
+      
+      if (client.readyState === ws.OPEN) {
+        client.send(JSON.stringify(event));
+      }
+    });
+  }
+});
 
 const server = new http.createServer((req, _) => {
   // here we only handle websocket connections

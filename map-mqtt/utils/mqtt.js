@@ -9,7 +9,7 @@ export const POLLING_TOPIC = 'polling';
 export const GW_ALL_TOPIC = '/gw/all';
 export const GW_ALARM_TOPIC = '/gw/alarm';
 
-export const mqttClient = MQTT.connect(process.env.MQTT_URL);
+const mqttClient = MQTT.connect(process.env.MQTT_URL);
 
 const onConnectHandler = async () => {
   mqttLogger.info('MQTT connected');
@@ -46,25 +46,6 @@ const onConnectHandler = async () => {
 }
 
 const onMessageHandler = async (topic, message) => {  
-  if (topic === ALARM_TOPIC) {
-    mqttLogger.info(`[${topic}]: ${message}`);
-
-    await fetch(`${process.env.API_URL}/map/v1/events/alarm`, {
-      method: 'post',
-      body: message,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
-
-  if (topic === POLLING_TOPIC) {
-    mqttLogger.info(`[${topic}]: ${message}`);
-    
-    await fetch(`${process.env.API_URL}/map/v1/events/polling`, {
-      method: 'post',
-      body: message,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
 
   if (topic === GW_ALL_TOPIC) {
     mqttLogger.info(`[${topic}]: ${message}`);
@@ -75,17 +56,9 @@ const onMessageHandler = async (topic, message) => {
       headers: { 'Content-Type': 'application/json' },
     });
   }
-
-  if (topic === GW_ALARM_TOPIC) {
-    mqttLogger.info(`[${topic}]: ${message}`);
-
-    await fetch(`${process.env.API_URL}/map/v1/events/alarm`, {
-      method: 'post',
-      body: message,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
 }
 
 mqttClient.on('connect', onConnectHandler);
 mqttClient.on('message', onMessageHandler);
+
+export { mqttClient };
