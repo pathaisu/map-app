@@ -1,27 +1,45 @@
 import bodyParser from 'body-parser';
-import getTime from 'date-fns/getTime/index.js'
-import differenceInSeconds from 'date-fns/fp/differenceInSeconds/index.js'
+import getTime from 'date-fns/getTime/index.js';
+import differenceInSeconds from 'date-fns/fp/differenceInSeconds/index.js';
 
 const jsonParser = bodyParser.json();
 const THRESHOLD = 60;
 
 const eventConsumer = async (req, res) => {
+  const { collectionEvents } = req.app.locals;
+
+  let events = [];
+  let timestamp = getTime(new Date());
+  const queryTimestamp = req.query.timestamp;
+
+  // Query for events that haven't display on UI yet
+  if (queryTimestamp) {
+    events = await collectionEvents
+      .find({ 
+        $and: [
+          { timestamp: { $gt: `${queryTimestamp}` } },
+          { timestamp: { $ne: `${queryTimestamp}` } },
+        ]
+      })
+      .toArray()
+      .then(result => result);
+  }
+
+  res.json({
+    timestamp,
+    events,
+  });
+}
+
+const eventProducer = async (req, res) => {
   const { 
     collectionWatcher,
     collectionEvents,
  } = req.app.locals;
 
-  let events = [];
-  const timestamp = getTime(new Date());
-  const queryTimestamp = req.query.timestamp;
-
-  if (queryTimestamp) {
-    events = await collectionEvents
-      .find({ timestamp: { $gte: `${queryTimestamp}` } })
-      .toArray()
-      .then(result => result);
-  }
-
+  let timestamp = getTime(new Date());
+  
+  // 1. Find existing watcher then filter for invalid sensors (sensors that last timestamp is longer than THRESHOLD)
   const watcher = await collectionWatcher
     .find({})
     .toArray()
@@ -36,22 +54,24 @@ const eventConsumer = async (req, res) => {
     return diffTime > THRESHOLD;
   });
 
-  // Create invalid watcher
+  // 2. Convert invalid watcher into new events then insert them to events collection
   for (const sensor of invalidWatcher) {
+    timestamp = getTime(new Date());
+
     delete sensor._id;
   
     const event = {
       eventType: 'polling',
       reason: 'too long since last node',
       timestamp: `${timestamp}`,
+      status: 'not_resolve',
       sensor,
     }
 
-    events.push(event);
-    // await collectionEvents.insertOne({ ...event });
+    await collectionEvents.insertOne({ ...event });
   }
 
-  res.json(events);
+  res.json({ timestamp });
 }
 
 const alarmEventProducer = async (req, res) => {
@@ -68,18 +88,17 @@ const alarmEventProducer = async (req, res) => {
     eventType: 'alarm',
     reason: 'invade',
     timestamp: `${timestamp}`,
+    status: 'not_resolve',
     sensor: {
       ...sensor,
       timestamp: `${timestamp}`,
     },
   }
 
-  console.log(event);
-
   await collectionSensors.insertOne({ ...sensor });
   await collectionEvents.insertOne({ ...event });
 
-  res.json({ result: true });
+  res.json(event);
 }
 
 const pollingEventProducer = async (req, res) => {
@@ -98,6 +117,7 @@ const pollingEventProducer = async (req, res) => {
     timestamp: `${timestamp}`,
   });
 
+  // Generate new event if last sensor timestamp is longer than THRESHOLD
   const watcher = await collectionWatcher.findOne({ id: sensor.id });
 
   if (watcher) { 
@@ -111,6 +131,7 @@ const pollingEventProducer = async (req, res) => {
         eventType: 'polling',
         reason: 'too long since last node',
         timestamp: `${timestamp}`,
+        status: 'not_resolve',
         sensor,
       }
     
@@ -118,6 +139,7 @@ const pollingEventProducer = async (req, res) => {
     }
   }
 
+  // Update current sensor to watcher
   await collectionWatcher.update(
     { id: sensor.id }, 
     { 
@@ -130,9 +152,32 @@ const pollingEventProducer = async (req, res) => {
   res.json({ result: true });
 }
 
+const setEventToResolve =  async (req, res) => {
+  // Get mongo client from req.app.locals
+  const { 
+    collectionEvents,
+  } = req.app.locals;
+
+  const event = JSON.parse(JSON.stringify(req.body));
+
+  // Update current sensor to watcher
+  await collectionEvents.update(
+    { timestamp: event.timestamp }, 
+    { 
+      ...event,
+      status: 'resolve', 
+    },
+  );
+
+  res.json({ result: true });
+}
+
 export default (app) => {
   app.get('/map/v1/events', 
     (req, res) => eventConsumer(req, res),
+  );
+  app.get('/map/v1/events/producer', 
+    (req, res) => eventProducer(req, res),
   );
   app.post('/map/v1/events/polling', 
     jsonParser,
@@ -141,5 +186,9 @@ export default (app) => {
   app.post('/map/v1/events/alarm', 
     jsonParser,
     (req, res) => alarmEventProducer(req, res),
+  );
+  app.post('/map/v1/events/resolve', 
+    jsonParser,
+    (req, res) => setEventToResolve(req, res),
   );
 } 
