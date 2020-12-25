@@ -1,0 +1,12 @@
+.signal {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  margin-bottom: 5px;
+  margin-right: 5px;
+}
+
+.signalItem {
+  width: 4px;
+  margin-left: 1px;
+}

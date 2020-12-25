@@ -2,6 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import toDate from 'date-fns/toDate';
 import Battery from '../components/Battery';
+import Signal from '../components/Signal';
 import { setResolveEvent } from '../apis/httpRequest';
 
 const MainContainer = styled.div`
@@ -155,7 +156,6 @@ function Notification(props) {
             const latestSensorTime = toDate(Number(latestSensor.timestamp)).toLocaleString();
             const {
               soc = 0,
-              bat = 0,
               sem = 0,
               uls = 0,
             } = latestSensor.sensor;
@@ -168,10 +168,12 @@ function Notification(props) {
               >
                 <ContentContainer>
                   <TitleWrapper style={{ color: '#000' }}>
-                    Sensor หมายเลข: {index}
+                    { index === 0 ? 'Gateway' : `Sensor หมายเลข: ${index}` }
                   </TitleWrapper>
                   <SensorStatusWrapper style={{ color: '#000' }}>
-                    <Battery power={soc}></Battery> bat: {bat}, sem: {sem}, uls: {uls}          
+                    BAT: <Battery power={soc}></Battery>
+                    SEM: <Signal level={sem}></Signal>
+                    ULS: <Signal level={uls}></Signal>        
                   </SensorStatusWrapper>
                   <TitleWrapper>
                     จำนวนครั้งที่พบปัญหา: { value.length } ครั้ง
