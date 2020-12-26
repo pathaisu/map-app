@@ -157,16 +157,18 @@ export const setEventToResolve =  async (req, res) => {
     collectionEvents,
   } = req.app.locals;
 
-  const event = JSON.parse(JSON.stringify(req.body));
+  const events = JSON.parse(JSON.stringify(req.body));
 
   // Update current sensor to watcher
-  await collectionEvents.update(
-    { timestamp: event.timestamp }, 
-    { 
-      ...event,
-      status: 'resolve', 
-    },
-  );
+  events.map(async (event) => {
+    await collectionEvents.update(
+      { timestamp: event.timestamp }, 
+      { 
+        ...event,
+        status: 'resolve', 
+      },
+    );
+  });
 
   res.json({ result: true });
 }
