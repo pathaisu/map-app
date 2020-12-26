@@ -119,13 +119,29 @@ class MapPage extends Component {
   }
 
   async notificationHandler(timestamps) {
+    const sensorsId = [];
+
     this.setStateAsync({ notifications: this.state.notifications.map(
       notification => {
-        if (timestamps.includes(notification.timestamp)) notification.status = 'resolve';
+        if (timestamps.includes(notification.timestamp)) {
+          notification.status = 'resolve';
+          sensorsId.push(notification.sensor.id);
+        }
 
         return notification;
       })
     });
+
+
+    this.setStateAsync({ sensors: this.state.sensors.map(
+      sensor => {
+        if (sensorsId.includes(sensor.id)) {
+          sensor.active = true;
+        }
+
+        return sensor;
+      }
+    )})
   }
 
   render() {
