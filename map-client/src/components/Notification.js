@@ -8,9 +8,41 @@ import { setResolveEvent } from '../apis/httpRequest';
 const MainContainer = styled.div`
   display: flex;
   flex-direction: column;
-  height: 300px;
+  height: 30vh;
+`;
+
+const Title = styled.h1`
+  font-weight: bold;
+  text-align: center;
+`;
+
+const ItemsWrapper = styled.div`
+  height: 100%;
   overflow: auto;
-  border
+  padding: 5px 10px;
+`;
+
+const InfoContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  height: 40vh;
+`;
+
+const InfoItemContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  padding: 5px;
+  margin: 10px;
+  background-color: #F5F5F5;
+  border: 1px solid #E9EAEC;
+  border-radius: 10px;
+  box-shadow: 0 0 1px 0 rgba(0,0,0,.4);
+  cursor: pointer;
+  font-size: 12px;
+  overflow: auto;
 `;
 
 const ItemContainer = styled.div`
@@ -48,7 +80,7 @@ const SensorStatusWrapper = styled.div`
   flex-direction: row;
   padding-bottom: 6px;
   margin-bottom: 6px;
-  border-bottom: 1px solid #CED5DB;
+  // border-bottom: 1px solid #CED5DB;
 `;
 
 const ResolveButton = styled.button`
@@ -113,59 +145,19 @@ function Notification(props) {
 
   return (
     <div>
-      <MainContainer>
-        <h1><b>Alarm</b></h1>
-        {
-          alarmNotifications.map((value, index) => {
-            return (
-              <ItemContainer
-                id={ `alarm${index}`}
-                key={index}
-                style={
-                  value.status === 'not_resolve' ?  sensorAlarmInActiveStatus : sensorActiveStatus
-                }
-              >
-                <ContentContainer>
-                  <TitleWrapper>
-                    Sensor หมายเลข: {value.sensor.id} โดนบุกรุก
-                  </TitleWrapper>
-                  <InfoWrapper>
-                    เวลา: { toDate(Number(value.timestamp)).toLocaleString() }
-                  </InfoWrapper>
-                  <InfoWrapper>
-                    สถานะ: { value.status === 'not_resolve' ? 'ยังไม่ได้รับการตรวจสอบ' : 'ได้รับการตรวจสอบแล้ว' }
-                  </InfoWrapper>
-                  <ResolveButton 
-                    onClick={() => { handleClick(value, `alarm${index}`) }}
-                  >
-                    ทำการตรวจสอบ
-                  </ResolveButton>
-                </ContentContainer>
-              </ItemContainer>
-            )
-          })
-        }
-      </MainContainer>
-      <br/>
+      <InfoContainer>
+        <Title>INFO</Title>
+        <InfoItemContainer>
+          {
+            pollingNotifications.map((value, index) => {
+              const latestSensor = value[value.length - 1];
+              const {
+                soc = 0,
+                sem = 0,
+                uls = 0,
+              } = latestSensor.sensor;
 
-      <MainContainer>
-        <h1><b>Polling</b></h1>
-        {
-          pollingNotifications.map((value, index) => {
-            const latestSensor = value[value.length - 1];
-            const latestSensorTime = toDate(Number(latestSensor.timestamp)).toLocaleString();
-            const {
-              soc = 0,
-              sem = 0,
-              uls = 0,
-            } = latestSensor.sensor;
-
-            return (
-              <ItemContainer
-                id={ `polling${index}`}
-                key={index}
-                style={ sensorPollingInActiveStatus }
-              >
+              return (
                 <ContentContainer>
                   <TitleWrapper style={{ color: '#000' }}>
                     { index === 0 ? 'Gateway' : `Sensor หมายเลข: ${index}` }
@@ -175,22 +167,82 @@ function Notification(props) {
                     SEM: <Signal level={sem}></Signal>
                     ULS: <Signal level={uls}></Signal>        
                   </SensorStatusWrapper>
-                  <TitleWrapper>
-                    จำนวนครั้งที่พบปัญหา: { value.length } ครั้ง
-                  </TitleWrapper>
-                  <InfoWrapper>
-                    เวลา: { latestSensorTime }
-                  </InfoWrapper>
-                  <ResolveButton 
-                    onClick={() => { handleClick(value, `polling${index}`) }}
-                  >
-                    ทำการตรวจสอบ
-                  </ResolveButton>
                 </ContentContainer>
-              </ItemContainer>
-            )
-          })
-        }
+              );
+            })
+          } 
+        </InfoItemContainer>
+      </InfoContainer>
+      <MainContainer>
+        <Title>ALARM</Title>
+        <ItemsWrapper>
+          {
+            alarmNotifications.map((value, index) => {
+              return (
+                <ItemContainer
+                  id={ `alarm${index}`}
+                  key={index}
+                  style={
+                    value.status === 'not_resolve' ?  sensorAlarmInActiveStatus : sensorActiveStatus
+                  }
+                >
+                  <ContentContainer>
+                    <TitleWrapper>
+                      Sensor หมายเลข: {value.sensor.id} โดนบุกรุก
+                    </TitleWrapper>
+                    <InfoWrapper>
+                      เวลา: { toDate(Number(value.timestamp)).toLocaleString() }
+                    </InfoWrapper>
+                    <InfoWrapper>
+                      สถานะ: { value.status === 'not_resolve' ? 'ยังไม่ได้รับการตรวจสอบ' : 'ได้รับการตรวจสอบแล้ว' }
+                    </InfoWrapper>
+                    <ResolveButton 
+                      onClick={() => { handleClick(value, `alarm${index}`) }}
+                    >
+                      ทำการตรวจสอบ
+                    </ResolveButton>
+                  </ContentContainer>
+                </ItemContainer>
+              )
+            })
+          }
+        </ItemsWrapper>
+      </MainContainer>
+      <MainContainer>
+        <Title>POLLING</Title>
+        <ItemsWrapper>
+          {
+            pollingNotifications.map((value, index) => {
+              const latestSensor = value[value.length - 1];
+              const latestSensorTime = toDate(Number(latestSensor.timestamp)).toLocaleString();
+
+              return (
+                <ItemContainer
+                  id={ `polling${index}`}
+                  key={index}
+                  style={ sensorPollingInActiveStatus }
+                >
+                  <ContentContainer>
+                    <TitleWrapper style={{ color: '#000' }}>
+                      { index === 0 ? 'Gateway' : `Sensor หมายเลข: ${index}` }
+                    </TitleWrapper>
+                    <TitleWrapper>
+                      จำนวนครั้งที่พบปัญหา: { value.length } ครั้ง
+                    </TitleWrapper>
+                    <InfoWrapper>
+                      เวลา: { latestSensorTime }
+                    </InfoWrapper>
+                    <ResolveButton 
+                      onClick={() => { handleClick(value, `polling${index}`) }}
+                    >
+                      ทำการตรวจสอบ
+                    </ResolveButton>
+                  </ContentContainer>
+                </ItemContainer>
+              )
+            })
+          }
+        </ItemsWrapper>
       </MainContainer>
     </div>
   );

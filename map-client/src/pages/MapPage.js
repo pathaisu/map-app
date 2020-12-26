@@ -9,22 +9,26 @@ const POLLING_TIME = 30000;
 
 const Container = styled.div`
   display: flex;
+  width: 100%;
 `;
 
-const Panel = styled.div`
+const PanelContainer = styled.div`
   display: flex;
   flex-direction: column;
   background-color: #FFF;
   width: 250px;
-  height: calc(100vh - 52px);
-  padding: 10px;
   border: 1px solid #E9EAEC;
   box-shadow: 1px 0 6px 0 rgba(0,0,0,.06);
+  // height: calc(100vh - 52px);
+
+  @media (max-width: 920px) {
+    display: none;
+  }
 `;
 
 const MapContainer = styled.div`
   display: block;
-  width: 200px;
+  height: 100vh;
 `;
 
 const ActivityContainer = styled.div`
@@ -51,6 +55,7 @@ const setPinInActiveStatus = (sensors, notifications) => {
 }
 
 class MapPage extends Component {
+  // ws endpoint must be localhost because it's client side.
   socket = new WebSocket("ws://localhost:3003");
   state = {};
   notifications = [];
@@ -63,7 +68,7 @@ class MapPage extends Component {
   }
 
   async pollingEvents() {
-    // When there is no available sensors on web
+    // when there is no available sensors on web
     if (this.state.sensors.length === 0) {
       const data = await getWatcher();
       
@@ -116,11 +121,11 @@ class MapPage extends Component {
   render() {
     return (
       <Container>
-        <Panel>
+        <PanelContainer>
           <ActivityContainer>
             <Notification notifications={this.state.notifications} />
           </ActivityContainer>
-        </Panel>
+        </PanelContainer>
         <MapContainer>
           <MapContent sensors={this.state.sensors} />
         </MapContainer>
