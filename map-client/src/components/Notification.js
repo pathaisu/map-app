@@ -60,10 +60,6 @@ const ItemTitleWrapper = styled.div`
   margin-bottom: 3px;
 `;
 
-const InfoWrapper = styled.div`
-  margin-bottom: 3px;
-`;
-
 const SensorStatusWrapper = styled.div`
   display: flex;
   flex-direction: row;
@@ -90,11 +86,6 @@ const Divider = styled.div`
   border-bottom: 1px solid #CED5DB;
 `;
 
-const sensorActiveStatus = {
-  color: '#228B22',
-  fontSize: '12px',
-}
-
 const sensorAlarmInActiveStatus = {
   color: '#FF0000',
   fontSize: '12px',
@@ -116,39 +107,18 @@ const reducer = (acc, cur) => {
 };
 
 function Notification(props) {
-  // const [alarmNotifications, setAlarmNotifications] = useState(
-  //   props.notifications && props.notifications.length > 0
-  //     ? Object.values(props.notifications
-  //         .filter(notification => notification.eventType === 'alarm')
-  //         .reduce(reducer, {}))
-  //     : []
-  // );
-
   const [alarmNotifications, setAlarmNotifications] = useState([]);
-
-  // const [pollingNotifications, setPollingNotifications] = useState(
-  //   props.notifications && props.notifications.length > 0
-  //     ? Object.values(props.notifications
-  //         .filter(notification => notification.eventType === 'polling')
-  //         .reduce(reducer, {}))
-  //     : []
-  // );
-
   const [pollingNotifications, setPollingNotifications] = useState([]);
 
   const { notifications } = props;
 
   useEffect(() => {
     if (notifications) {
-      console.log(Object.values(notifications));
       setAlarmNotifications(
         () => ([
           ...Object.values(notifications
             .filter(notification => notification.eventType === 'alarm')
-            .filter(notification => { 
-              console.log(notification);
-              return notification.status === 'not_resolve'
-            })
+            .filter(notification => notification.status === 'not_resolve')
             .reduce(reducer, {}))
           ])
       )
@@ -173,20 +143,18 @@ function Notification(props) {
     const pollingEvent = pollingNotifications[id];
 
     if(alarmNotifications[id]) {
-      // console.log(id);
-      // console.log(alarmNotifications.splice(id, 1));
-      // console.log(alarmNotifications);
-
-      alarmNotifications.splice(id, 1);
       await setResolveEvent(alarmEvent);
+      
+      alarmNotifications.splice(id, 1);
       setAlarmNotifications([...alarmNotifications]);
     }
 
     if(pollingNotifications[id]) {
       if (pollingEvent._id) delete pollingEvent._id;
+      await setResolveEvent(pollingEvent);
 
-      // await setResolveEvent(pollingEvent);
-      // setPollingNotifications(pollingNotifications.splice(id));
+      pollingNotifications.splice(id, 1);
+      setPollingNotifications([...pollingNotifications]);
     }
   };
 
@@ -221,7 +189,7 @@ function Notification(props) {
                   }
                 </ItemContainer>
               );
-            })
+            })   
           } 
         </ItemsContainer>
       </InfoContainer>
@@ -230,16 +198,16 @@ function Notification(props) {
         <ItemsContainer>
           {
             alarmNotifications.map((value, index) => {
+              const sensorId = value[0].sensor.id;
               const timestamps = value.map(sensor => sensor.timestamp);
 
               return (
                 <ItemContainer
-                  id={ `alarm${index}`}
                   key={index}
                   style={ sensorAlarmInActiveStatus }
                 >
                   <ItemTitleWrapper style={{ color: '#000' }}>
-                    { value[0].sensor.id === 0 ? 'Gateway' : `Sensor หมายเลข: ${value[0].sensor.id}` } โดนบุกรุก
+                    { sensorId === 0 ? 'Gateway' : `Sensor หมายเลข: ${sensorId}` }
                   </ItemTitleWrapper>
                   <ItemTitleWrapper>
                     จำนวนครั้งที่พบปัญหา: { value.length } ครั้ง
@@ -253,15 +221,9 @@ function Notification(props) {
                       )
                     })
                   }
-                  {/* <InfoWrapper>
-                    เวลา: { toDate(Number(value.timestamp)).toLocaleString() }
-                  </InfoWrapper> */}
-                  {/* <InfoWrapper>
-                    สถานะ: { value.status === 'not_resolve' ? 'ยังไม่ได้รับการตรวจสอบ' : 'ได้รับการตรวจสอบแล้ว' }
-                  </InfoWrapper> */}
                   <ResolveButton
-                    // onClick={() => { handleClick(value, `alarm${index}`) }}
                     onClick={() => {
+                      // Callback to parent action method 
                       props.action(timestamps);
                       handleClick(index);
                     }}
@@ -282,17 +244,16 @@ function Notification(props) {
         <ItemsContainer>
           {
             pollingNotifications.map((value, index) => {
-              // const latestSensor = value[value.length - 1];
-              // const latestSensorTime = toDate(Number(latestSensor.timestamp)).toLocaleString();
+              const sensorId = value[0].sensor.id;
+              const timestamps = value.map(sensor => sensor.timestamp);
 
               return (
                 <ItemContainer
-                  id={ `polling${index}`}
                   key={index}
                   style={ sensorPollingInActiveStatus }
                 >
                   <ItemTitleWrapper style={{ color: '#000' }}>
-                    { index === 0 ? 'Gateway' : `Sensor หมายเลข: ${index}` }
+                    { sensorId === 0 ? 'Gateway' : `Sensor หมายเลข: ${sensorId}` }
                   </ItemTitleWrapper>
                   <ItemTitleWrapper>
                     จำนวนครั้งที่พบปัญหา: { value.length } ครั้ง
@@ -306,12 +267,12 @@ function Notification(props) {
                       )
                     })
                   }
-                  <InfoWrapper>
-                    {/* - เวลา: { latestSensorTime } */}
-                  </InfoWrapper>
                   <ResolveButton 
-                    // onClick={() => { handleClick(value, `polling${index}`) }}
-                    onClick={() => { handleClick(index) }}
+                    onClick={() => { 
+                      // Callback to parent action method 
+                      props.action(timestamps);
+                      handleClick(index) 
+                    }}
                   >
                     ทำการตรวจสอบ
                   </ResolveButton>
