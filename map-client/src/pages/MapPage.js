@@ -118,12 +118,25 @@ class MapPage extends Component {
     }, POLLING_TIME);
   }
 
+  async notificationHandler(timestamps) {
+    this.setStateAsync({ notifications: this.state.notifications.map(
+      notification => {
+        if (timestamps.includes(notification.timestamp)) notification.status = 'resolve';
+
+        return notification;
+      })
+    });
+  }
+
   render() {
     return (
       <Container>
         <PanelContainer>
           <ActivityContainer>
-            <Notification notifications={this.state.notifications} />
+            <Notification 
+              action={this.notificationHandler.bind(this)}
+              notifications={this.state.notifications}
+            />
           </ActivityContainer>
         </PanelContainer>
         <MapContainer>

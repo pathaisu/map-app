@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import toDate from 'date-fns/toDate';
 import Battery from '../components/Battery';
@@ -105,63 +105,88 @@ const sensorPollingInActiveStatus = {
   fontSize: '12px',
 }
 
-function Notification(props) {
-  let pollingNotifications = [];
-  let alarmNotifications = [];
-
-  const reducer = (acc, cur) => {
-    if (acc[cur.sensor.id]) {
-      acc[cur.sensor.id].push(cur);
-    } else {
-      acc[cur.sensor.id] = [cur];
-    }
-
-    return acc;
-  };
-
-  if (props.notifications) {
-    pollingNotifications = Object.values(props.notifications
-      .filter(notification => notification.eventType === 'polling')
-      .reduce(reducer, {}));
-
-    alarmNotifications = Object.values(props.notifications
-      .filter(notification => notification.eventType === 'alarm')
-      .reduce(reducer, {}));
-
-    // alarmNotifications = props.notifications
-    //   .filter(notification => notification.eventType === 'alarm');
+const reducer = (acc, cur) => {
+  if (acc[cur.sensor.id]) {
+    acc[cur.sensor.id].push(cur);
+  } else {
+    acc[cur.sensor.id] = [cur];
   }
 
-  // const handleClick = async (event, id) => {
-  //   if (event._id) {
-  //     delete event._id;
-  //   }
+  return acc;
+};
 
-  //   console.log(event);
-  //   console.log(pollingNotifications);
+function Notification(props) {
+  // const [alarmNotifications, setAlarmNotifications] = useState(
+  //   props.notifications && props.notifications.length > 0
+  //     ? Object.values(props.notifications
+  //         .filter(notification => notification.eventType === 'alarm')
+  //         .reduce(reducer, {}))
+  //     : []
+  // );
 
-  //   // await setResolveEvent(event);
-  //   // console.log(document.getElementById(id))
-  //   // document.getElementById(id).style.color = '#228B22';
-  // };
+  const [alarmNotifications, setAlarmNotifications] = useState([]);
 
+  // const [pollingNotifications, setPollingNotifications] = useState(
+  //   props.notifications && props.notifications.length > 0
+  //     ? Object.values(props.notifications
+  //         .filter(notification => notification.eventType === 'polling')
+  //         .reduce(reducer, {}))
+  //     : []
+  // );
+
+  const [pollingNotifications, setPollingNotifications] = useState([]);
+
+  const { notifications } = props;
+
+  useEffect(() => {
+    if (notifications) {
+      console.log(Object.values(notifications));
+      setAlarmNotifications(
+        () => ([
+          ...Object.values(notifications
+            .filter(notification => notification.eventType === 'alarm')
+            .filter(notification => { 
+              console.log(notification);
+              return notification.status === 'not_resolve'
+            })
+            .reduce(reducer, {}))
+          ])
+      )
+    }
+  }, [notifications]);
+
+  useEffect(() => {
+    if (notifications) {
+      setPollingNotifications(
+        () => ([
+          ...Object.values(notifications
+            .filter(notification => notification.eventType === 'polling')
+            .filter(notification => notification.status === 'not_resolve')
+            .reduce(reducer, {}))
+          ])
+      )
+    }
+  }, [notifications]);
 
   const handleClick = async (id) => {
     const alarmEvent = alarmNotifications[id];
     const pollingEvent = pollingNotifications[id];
-    
-    if (pollingEvent._id) {
-      delete pollingEvent._id;
-    }
 
     if(alarmNotifications[id]) {
-      alarmNotifications.splice(id);
+      // console.log(id);
+      // console.log(alarmNotifications.splice(id, 1));
+      // console.log(alarmNotifications);
+
+      alarmNotifications.splice(id, 1);
       await setResolveEvent(alarmEvent);
+      setAlarmNotifications([...alarmNotifications]);
     }
 
     if(pollingNotifications[id]) {
-      pollingNotifications.splice(id);
-      await setResolveEvent(pollingEvent);
+      if (pollingEvent._id) delete pollingEvent._id;
+
+      // await setResolveEvent(pollingEvent);
+      // setPollingNotifications(pollingNotifications.splice(id));
     }
   };
 
@@ -205,6 +230,8 @@ function Notification(props) {
         <ItemsContainer>
           {
             alarmNotifications.map((value, index) => {
+              const timestamps = value.map(sensor => sensor.timestamp);
+
               return (
                 <ItemContainer
                   id={ `alarm${index}`}
@@ -212,7 +239,7 @@ function Notification(props) {
                   style={ sensorAlarmInActiveStatus }
                 >
                   <ItemTitleWrapper style={{ color: '#000' }}>
-                    { index === 0 ? 'Gateway' : `Sensor หมายเลข: ${index}` } โดนบุกรุก
+                    { value[0].sensor.id === 0 ? 'Gateway' : `Sensor หมายเลข: ${value[0].sensor.id}` } โดนบุกรุก
                   </ItemTitleWrapper>
                   <ItemTitleWrapper>
                     จำนวนครั้งที่พบปัญหา: { value.length } ครั้ง
@@ -234,7 +261,10 @@ function Notification(props) {
                   </InfoWrapper> */}
                   <ResolveButton
                     // onClick={() => { handleClick(value, `alarm${index}`) }}
-                    onClick={() => { handleClick(index) }}
+                    onClick={() => {
+                      props.action(timestamps);
+                      handleClick(index);
+                    }}
                   >
                     ทำการตรวจสอบ
                   </ResolveButton>
