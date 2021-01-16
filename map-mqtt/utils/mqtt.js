@@ -23,7 +23,7 @@ const onConnectHandler = async () => {
 
     await mqttClient.subscribe(GW_ALARM_TOPIC, function (err) {
       if (!err) {
-        mqttLogger.info('Subscribe polling success');
+        mqttLogger.info('Subscribe alarm success');
       }
     });
 
@@ -52,8 +52,8 @@ const onMessageHandler = async (topic, message) => {
 
     await fetch(`${process.env.API_URL}/map/v1/events/polling`, {
       method: 'post',
-      body: message,
       headers: { 'Content-Type': 'application/json' },
+      body: message,
     });
   }
 }

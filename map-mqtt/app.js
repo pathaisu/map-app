@@ -36,8 +36,8 @@ mqttClient.on('message', async (topic, message) => {
   if (topic === GW_ALARM_TOPIC) {
     const event = await fetch(`${process.env.API_URL}/map/v1/events/alarm`, {
       method: 'post',
-      body: message,
       headers: { 'Content-Type': 'application/json' },
+      body: message,
     }).then(response => response.json());
 
     wss.clients.forEach((client) => {
