@@ -150,7 +150,10 @@ function Notification(props) {
     }
 
     if(pollingNotifications[id]) {
-      if (pollingEvent._id) delete pollingEvent._id;
+      pollingEvent.forEach((event, index) => {
+        if (event._id) delete pollingEvent[index]._id;
+      });     
+
       await setResolveEvent(pollingEvent);
 
       pollingNotifications.splice(id, 1);
