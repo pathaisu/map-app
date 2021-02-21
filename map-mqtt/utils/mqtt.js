@@ -4,8 +4,6 @@ import 'dotenv/config.js';
 
 import { mqttLogger } from './logger.js';
 
-export const ALARM_TOPIC = 'alarm';
-export const POLLING_TOPIC = 'polling';
 export const GW_ALL_TOPIC = '/gw/all';
 export const GW_ALARM_TOPIC = '/gw/alarm';
 
@@ -25,20 +23,7 @@ const onConnectHandler = async () => {
       if (!err) {
         mqttLogger.info('Subscribe alarm success');
       }
-    });
-
-    await mqttClient.subscribe(POLLING_TOPIC, function (err) {
-      if (!err) {
-        mqttLogger.info('Subscribe polling success');
-      }
-    });
-
-    await mqttClient.subscribe(ALARM_TOPIC, function (err) {
-      if (!err) {
-        mqttLogger.info('Subscribe alarm success');
-      }
-    });
-        
+    }); 
 	} catch (e){
 		mqttLogger.error(e.stack);
 		process.exit();
@@ -46,9 +31,13 @@ const onConnectHandler = async () => {
 }
 
 const onMessageHandler = async (topic, message) => {  
-
   if (topic === GW_ALL_TOPIC) {
     mqttLogger.info(`[${topic}]: ${message}`);
+
+    /**
+     * TODO: add handler to check message payload that is it matches with 
+     * `{id: 4, lat: 19.756218, lng: 98.953974, sem: 8, uis: 8, bat: 4000, soc: 50 }`
+     */
 
     await fetch(`${process.env.API_URL}/map/v1/events/polling`, {
       method: 'post',

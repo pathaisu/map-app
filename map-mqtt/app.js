@@ -34,6 +34,11 @@ const onSocketConnect = (wsClient) => {
 
 mqttClient.on('message', async (topic, message) => {   
   if (topic === GW_ALARM_TOPIC) {
+    /**
+     * TODO: add handler to check message payload that is it matches with 
+     * `{id: 4, lat: 19.756218, lng: 98.953974, sem: 8, uis: 8, bat: 4000, soc: 50 }`
+     */ 
+
     const event = await fetch(`${process.env.API_URL}/map/v1/events/alarm`, {
       method: 'post',
       headers: { 'Content-Type': 'application/json' },

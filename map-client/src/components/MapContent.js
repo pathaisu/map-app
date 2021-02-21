@@ -15,13 +15,13 @@ function MapContent(props) {
   if (props.sensors) {
     const { sensors } = props;
     const gw = sensors.filter(sensor => sensor.id === 0);
-
-    state.nodes = sensors; 
-
+    
     if (gw.length > 0) {
       state.lat = gw[0].lat;
       state.lng = gw[0].lng;
     }
+
+    state.nodes = sensors;
   }
 
   const activeIcon = L.divIcon({
