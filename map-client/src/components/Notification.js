@@ -161,13 +161,16 @@ function Notification(props) {
     }
   };
 
+  // using alarmNotifications when pollingNotifications is not available
+  const notificationStatus = pollingNotifications.length ? pollingNotifications : alarmNotifications;
+
   return (
     <div>
       <InfoContainer>
         <Title>สถานะทั่วไป</Title>
         <ItemsContainer>
           {
-            pollingNotifications.map((value, index) => {
+            notificationStatus.map((value, index) => {
               const latestSensor = value[value.length - 1];
               const {
                 soc = 0,
@@ -180,7 +183,7 @@ function Notification(props) {
                   key={index}
                 >
                   <ItemTitleWrapper style={{ color: '#000' }}>
-                    { index === 0 ? 'Gateway' : `Sensor หมายเลข: ${index}` }
+                    { index === 0 ? 'Gateway' : `Sensor หมายเลข: ${latestSensor.sensor.id}` }
                   </ItemTitleWrapper>
                   <SensorStatusWrapper style={{ color: '#000' }}>
                     BAT: <Battery power={soc}></Battery>
@@ -188,7 +191,7 @@ function Notification(props) {
                     ULS: <Signal level={uls}></Signal>        
                   </SensorStatusWrapper>
                   {
-                    (pollingNotifications.length - 1) > index && <Divider></Divider>
+                    (notificationStatus.length - 1) > index && <Divider></Divider>
                   }
                 </ItemContainer>
               );
