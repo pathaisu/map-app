@@ -1,4 +1,3 @@
-import fetch from 'node-fetch'
 import MQTT from 'async-mqtt';
 import 'dotenv/config.js';
 
@@ -30,24 +29,6 @@ const onConnectHandler = async () => {
 	}
 }
 
-const onMessageHandler = async (topic, message) => {  
-  if (topic === GW_ALL_TOPIC) {
-    mqttLogger.info(`[${topic}]: ${message}`);
-
-    /**
-     * TODO: add handler to check message payload that is it matches with 
-     * `{id: 4, lat: 19.756218, lng: 98.953974, sem: 8, uis: 8, bat: 4000, soc: 50 }`
-     */
-
-    await fetch(`${process.env.API_URL}/map/v1/events/polling`, {
-      method: 'post',
-      headers: { 'Content-Type': 'application/json' },
-      body: message,
-    });
-  }
-}
-
 mqttClient.on('connect', onConnectHandler);
-mqttClient.on('message', onMessageHandler);
 
 export { mqttClient };
