@@ -45,7 +45,7 @@ const onSocketConnect = (wsClient) => {
 
 mqttClient.on('message', async (topic, message) => {   
   if (topic === GW_ALL_TOPIC) {
-    if(!sensorValidation(message)) return;
+    if (!sensorValidation(message)) return;
     
     mqttLogger.info(`[${topic}]: ${message}`);
     
@@ -57,7 +57,12 @@ mqttClient.on('message', async (topic, message) => {
   }
 
   if (topic === GW_ALARM_TOPIC) {
-    if(!sensorValidation(message)) return;
+    if (!sensorValidation(message)) return;
+
+    const alarmMessage = JSON.parse(message.toString());
+
+    // Logic to reject alarm message when values is lower than threshold 
+    if (alarmMessage.sem === 0 && alarmMessage.uis < 5) return;
 
     const event = await fetch(`${process.env.API_URL}/map/v1/events/alarm`, {
       method: 'post',
