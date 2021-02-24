@@ -1,7 +1,7 @@
 import cron from 'cron';
 import { getEvents } from './apis/httpRequest.js';
 
-const POLLING_TIME = 30000;
+const POLLING_TIME = 300000;
 
 let queryTime = `${Date.now() - POLLING_TIME}`;
 

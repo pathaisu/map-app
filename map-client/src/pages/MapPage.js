@@ -6,7 +6,7 @@ import Notification from '../components/Notification';
 import { getWatcher, getEvents } from '../apis/httpRequest';
 import { wsEndpoint } from '../utils/config.js';
 
-const POLLING_TIME = 30000;
+const POLLING_TIME = 300000;
 
 const Container = styled.div`
   display: flex;
