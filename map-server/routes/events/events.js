@@ -57,6 +57,7 @@ export const eventProducer = async (req, res) => {
   for (const sensor of invalidWatcher) {
     timestamp = getTime(new Date());
 
+    // Some times payload contains `_id` but this property is not necessary for generating new event.
     delete sensor._id;
   
     const event = {

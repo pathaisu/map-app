@@ -1,5 +1,7 @@
+import { apiEndpoint } from '../utils/config.js';
+
 export const getWatcher = async () => {
-  const data = await fetch('http://localhost:3002/map/v1/watcher', { 
+  const data = await fetch(`${apiEndpoint}/map/v1/watcher`, { 
     mode: 'cors' 
   }).then(res => res.json());
   
@@ -7,7 +9,7 @@ export const getWatcher = async () => {
 }
 
 export const getEvents = async (timestamp) => {
-  const data = await fetch(`http://localhost:3002/map/v1/events/consumer?timestamp=${timestamp}`, { 
+  const data = await fetch(`${apiEndpoint}/map/v1/events/consumer?timestamp=${timestamp}`, { 
     mode: 'cors' 
   }).then(res => res.json());
   
@@ -15,7 +17,7 @@ export const getEvents = async (timestamp) => {
 }
 
 export const setResolveEvent = async (event) => {
-  const data = await fetch('http://localhost:3002/map/v1/events/resolve', {
+  const data = await fetch(`${apiEndpoint}/map/v1/events/resolve`, {
     mode: 'cors',
     method: 'POST',
     headers: {
@@ -29,7 +31,7 @@ export const setResolveEvent = async (event) => {
 
 
 export const insertData = async (sensor) => {
-  const data = await fetch('http://localhost:3002/map/v1/sensors', {
+  const data = await fetch(`${apiEndpoint}/map/v1/sensors`, {
     mode: 'cors',
     method: 'POST',
     headers: {

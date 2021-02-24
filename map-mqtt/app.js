@@ -4,8 +4,19 @@ import ws from 'ws';
 import fetch from 'node-fetch';
 import 'dotenv/config.js';
 
-import { mqttClient, GW_ALARM_TOPIC } from './utils/mqtt.js';
-import { wsLogger, appLogger, mqttLogger } from './utils/logger.js';
+import { 
+  mqttClient, 
+  GW_ALARM_TOPIC, 
+  GW_ALL_TOPIC,
+} from './utils/mqtt.js';
+
+import { 
+  wsLogger, 
+  appLogger, 
+  mqttLogger,
+} from './utils/logger.js';
+
+import { sensorValidation } from './utils/validation.js';
 
 const CLIENTS = [];
 
@@ -33,11 +44,30 @@ const onSocketConnect = (wsClient) => {
 }
 
 mqttClient.on('message', async (topic, message) => {   
+  if (topic === GW_ALL_TOPIC) {
+    if (!sensorValidation(message)) return;
+    
+    mqttLogger.info(`[${topic}]: ${message}`);
+    
+    await fetch(`${process.env.API_URL}/map/v1/events/polling`, {
+      method: 'post',
+      headers: { 'Content-Type': 'application/json' },
+      body: message,
+    });
+  }
+
   if (topic === GW_ALARM_TOPIC) {
+    if (!sensorValidation(message)) return;
+
+    const alarmMessage = JSON.parse(message.toString());
+
+    // Logic to reject alarm message when values is lower than threshold 
+    if (alarmMessage.sem === 0 && alarmMessage.uis < 5) return;
+
     const event = await fetch(`${process.env.API_URL}/map/v1/events/alarm`, {
       method: 'post',
-      body: message,
       headers: { 'Content-Type': 'application/json' },
+      body: message,
     }).then(response => response.json());
 
     wss.clients.forEach((client) => {

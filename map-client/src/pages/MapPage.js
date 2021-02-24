@@ -4,8 +4,9 @@ import styled from 'styled-components';
 import MapContent from '../components/MapContent';
 import Notification from '../components/Notification';
 import { getWatcher, getEvents } from '../apis/httpRequest';
+import { wsEndpoint } from '../utils/config.js';
 
-const POLLING_TIME = 30000;
+const POLLING_TIME = 300000;
 
 const Container = styled.div`
   display: flex;
@@ -56,7 +57,7 @@ const setPinInActiveStatus = (sensors, notifications) => {
 
 class MapPage extends Component {
   // ws endpoint must be localhost because it's client side.
-  socket = new WebSocket("ws://localhost:3003");
+  socket = new WebSocket(wsEndpoint);
   state = {};
   notifications = [];
   queryTime = '';
@@ -131,7 +132,6 @@ class MapPage extends Component {
         return notification;
       })
     });
-
 
     this.setStateAsync({ sensors: this.state.sensors.map(
       sensor => {
