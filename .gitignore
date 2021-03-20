@@ -1,6 +1,11 @@
+# Client
 /map-client/node_modules
+/map-client/build
+
+# DB
 /map-db-mongo
 
+# MQTT
 /map-mqtt/node_modules
 /map-mqtt/log
 
@@ -9,7 +14,12 @@
 /map-mqtt/.env.*.local
 /map-mqtt/.env
 
+# Server
 /map-server/node_modules
 /map-server/log
 
+# Corn Job
 /map-cron-job/node_modules
+
+# etc
+.vscode

@@ -2,6 +2,7 @@ FROM node:14
 
 WORKDIR /usr/src/app
 ADD . /usr/src/app
+RUN npm i
 
 EXPOSE 3002
 
