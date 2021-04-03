@@ -58,8 +58,9 @@ const shouldProduceNewPollingEvent = (watcher, timestamp) => differenceInSeconds
 
 export const alarmEventProducer = async (req, res) => {
   const { sensor, timestamp } = await updateSensor(req);
+
   await updateWatcher(req, sensor, timestamp);
-  
+
   const event = updateEvent(req, 'alarm', sensor, timestamp);
 
   res.json(event);
@@ -67,6 +68,7 @@ export const alarmEventProducer = async (req, res) => {
 
 export const pollingEventProducer = async (req, res) => {
   const { sensor, timestamp } = await updateSensor(req);
+  
   await updateWatcher(req, sensor, timestamp);
 
   const { collectionWatcher } = req.app.locals;
