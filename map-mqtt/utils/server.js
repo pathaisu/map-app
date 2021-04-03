@@ -11,18 +11,6 @@ const wss = new ws.Server({
 
 const getUid = () => Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
 
-export const alarmToClient = async (topic, message) => {
-  const event = await addAlarmEvent(message);
-  
-  wss.clients.forEach((client) => {
-    wsLogger.info(`[${topic}]: ${message}, ${client.id}`);
-    
-    if (client.readyState === ws.OPEN) {
-      client.send(JSON.stringify(event));
-    }
-  });
-}
-
 const onSocketConnect = (wsClient) => {
   wsLogger.info('wss connected');
 
@@ -40,7 +28,19 @@ const onSocketConnect = (wsClient) => {
   CLIENTS.push(wsClient);
 }
 
-export const wsServer = new http.createServer((req, _) => {
+export const alarmToClient = async (topic, message) => {
+  const event = await addAlarmEvent(message);
+  
+  wss.clients.forEach((client) => {
+    wsLogger.info(`[${topic}]: ${message}, ${client.id}`);
+    
+    if (client.readyState === ws.OPEN) {
+      client.send(JSON.stringify(event));
+    }
+  });
+}
+
+export const server = new http.createServer((req, _) => {
   // here we only handle websocket connections
   // in real project we'd have some other code here to handle non-websocket requests
   wss.handleUpgrade(

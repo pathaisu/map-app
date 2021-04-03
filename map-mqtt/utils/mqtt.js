@@ -2,7 +2,7 @@ import MQTT from 'async-mqtt';
 import 'dotenv/config.js';
 
 import { addPollingEvent } from './api.js';
-import { alarmToClient } from './wsServer.js';
+import { alarmToClient } from './server.js';
 import { mqttLogger } from './logger.js';
 import { sensorValidation } from './validation.js';
 

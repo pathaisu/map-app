@@ -1,11 +1,11 @@
 import 'dotenv/config.js';
 
 import { mqttClient } from './utils/mqtt.js';
-import { wsServer } from './utils/wsServer.js';
+import { server } from './utils/server.js';
 import { appLogger } from './utils/logger.js';
 
-wsServer.listen(3003, () => {
-  appLogger.info(`Server started on port ${wsServer.address().port}`);
+server.listen(3003, () => {
+  appLogger.info(`Server started on port ${server.address().port}`);
 });
 
 process.on('SIGINT', () => {
