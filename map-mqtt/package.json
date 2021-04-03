@@ -6,10 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon --exec node app.js",
-    "test-polling": "node utils/test polling",
-    "test-alarm": "node utils/test alarm",
-    "test-gw-all": "node utils/test /gw/all",
-    "test-gw-alarm": "node utils/test /gw/alarm"
+    "test-gw-all": "node simulator/app /gw/all",
+    "test-gw-alarm": "node simulator/app /gw/alarm"
   },
   "keywords": [],
   "author": "",

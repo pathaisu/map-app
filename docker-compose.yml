@@ -6,7 +6,6 @@ services:
     volumes:
       - ./map-client:/usr/src/app
     working_dir: /usr/src/app
-    #command: npm run dev
     ports:
       - 3001:3000
     links:
@@ -15,6 +14,7 @@ services:
       - api
     environment:
       WAIT_HOSTS: mongo:27017
+      # REACT_APP_POLLING_TIME: 30000
 
   # CRON
   cron:
@@ -29,6 +29,8 @@ services:
       - mongo
     environment:
       WAIT_HOSTS: mongo:27017
+      API_URL: 'http://api:3002'
+      POLLING_TIME: 30000
 
   # MQTT
   mqtt:
@@ -42,7 +44,10 @@ services:
     depends_on:
       - mongo
     environment:
+      # MQTT_URL: 'mqtt://test.mosquitto.org'
+      MQTT_URL: tcp://202.44.44.232:1883
       WAIT_HOSTS: mongo:27017
+      API_URL: http://api:3002
 
   # API
   api:
@@ -56,6 +61,12 @@ services:
     depends_on:
       - mongo
     environment:
+      DB_URI: mongodb://mongo:27017
+      DB_NAME: map_app
+      COLLECTION_SENSORS: sensors
+      COLLECTION_EVENTS: events
+      COLLECTION_WATCHER: watcher
+      THRESHOLD: 60
       WAIT_HOSTS: mongo:27017
   
   # MongoDB sidecar
