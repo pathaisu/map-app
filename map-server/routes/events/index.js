@@ -1,13 +1,12 @@
 import bodyParser from 'body-parser';
-import { 
-  alarmEventProducer,
-  pollingEventProducer,
-} from './events.js';
 
 import { eventConsumer } from './handlers/consumer.js';
 import { eventProducer } from './handlers/producer.js';
 import { setEventToResolve } from './handlers/resolve.js';
-
+import { 
+  alarmEventProducer,
+  pollingEventProducer,
+} from './handlers/events.js';
 
 const jsonParser = bodyParser.json();
 
