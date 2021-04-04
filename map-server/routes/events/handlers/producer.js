@@ -6,7 +6,9 @@ const THRESHOLD = process.env.THRESHOLD;
 /**
  * 1. Find existing watcher then filter for invalid sensors (sensors that last timestamp is longer than THRESHOLD)
  */
-const getInvalidWatchers = async (collectionWatcher) => {
+const getInvalidWatchers = async (req) => {
+  const { collectionWatcher } = req.app.locals;
+
   const currentTimestamp = getTime(new Date());
   const watcher = await collectionWatcher
     .find({})
@@ -24,7 +26,9 @@ const getInvalidWatchers = async (collectionWatcher) => {
 /** 
  * 2. Convert invalid watcher into new events then insert them to events collection
  */
-const createNewPollingEvent = async (collectionEvents, invalidWatchers) => {
+const pollingEventProducer = async (req, invalidWatchers) => {
+  const { collectionEvents } = req.app.locals;
+
   let timestamp = getTime(new Date());
 
   if (!invalidWatchers.length) return timestamp;
@@ -41,7 +45,10 @@ const createNewPollingEvent = async (collectionEvents, invalidWatchers) => {
       reason: 'too long since last node',
       timestamp: `${timestamp}`,
       status: 'not_resolve',
-      sensor,
+      sensor: {
+        ...sensor,
+        timestamp: `${timestamp}`,
+      },
     });
   });
 
@@ -50,17 +57,28 @@ const createNewPollingEvent = async (collectionEvents, invalidWatchers) => {
   return timestamp;
 }
 
-export const eventProducer = async (req, res) => {
-  const { 
-    collectionWatcher,
-    collectionEvents,
-  } = req.app.locals;
+export const alarmEventProducer = async (req, sensor, timestamp) => {
+  const { collectionEvents } = req.app.locals;
 
-  const invalidWatchers = await getInvalidWatchers(collectionWatcher);
-  const latestTimestamp = await createNewPollingEvent(
-    collectionEvents, 
-    invalidWatchers
-  );
+  const event = {
+    eventType: 'alarm',
+    reason: 'invade',
+    timestamp: `${timestamp}`,
+    status: 'not_resolve',
+    sensor: {
+      ...sensor,
+      timestamp: `${timestamp}`,
+    },
+  }
+
+  await collectionEvents.insertOne({ ...event });
+
+  return event;
+}
+
+export const missingSensorsEventProducer = async (req, res) => {
+  const invalidWatchers = await getInvalidWatchers(req);
+  const latestTimestamp = await pollingEventProducer(req, invalidWatchers);
 
   res.json({ timestamp: latestTimestamp });
 }

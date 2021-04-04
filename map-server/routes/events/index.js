@@ -1,11 +1,11 @@
 import bodyParser from 'body-parser';
 
 import { eventConsumer } from './handlers/consumer.js';
-import { eventProducer } from './handlers/producer.js';
+import { missingSensorsEventProducer } from './handlers/producer.js';
 import { setEventToResolve } from './handlers/resolve.js';
 import { 
-  alarmEventProducer,
-  pollingEventProducer,
+  alarmSignalHandler,
+  pollingSignalHandler,
 } from './handlers/events.js';
 
 const jsonParser = bodyParser.json();
@@ -22,7 +22,7 @@ export default (app) => {
    * To: generate new events
    * For: => corn-job
    */
-  app.post('/map/v1/events/producer', (req, res) => eventProducer(req, res));
+  app.post('/map/v1/events/producer', (req, res) => missingSensorsEventProducer(req, res));
 
   /**
    * To: generate new polling event
@@ -30,7 +30,7 @@ export default (app) => {
    */
   app.post('/map/v1/events/polling', 
     jsonParser,
-    (req, res) => pollingEventProducer(req, res),
+    (req, res) => pollingSignalHandler(req, res),
   );
 
   /**
@@ -39,7 +39,7 @@ export default (app) => {
    */ 
   app.post('/map/v1/events/alarm', 
     jsonParser,
-    (req, res) => alarmEventProducer(req, res),
+    (req, res) => alarmSignalHandler(req, res),
   );
 
   /** 
