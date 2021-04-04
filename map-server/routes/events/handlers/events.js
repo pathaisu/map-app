@@ -61,25 +61,25 @@ export const alarmEventProducer = async (req, res) => {
 
   await updateWatcher(req, sensor, timestamp);
 
-  const event = updateEvent(req, 'alarm', sensor, timestamp);
+  const event = await updateEvent(req, 'alarm', sensor, timestamp);
 
   res.json(event);
 }
 
 export const pollingEventProducer = async (req, res) => {
   const { sensor, timestamp } = await updateSensor(req);
-  
-  await updateWatcher(req, sensor, timestamp);
 
   const { collectionWatcher } = req.app.locals;
 
   // Generate new event if last sensor timestamp is longer than THRESHOLD
   const watcher = await collectionWatcher.findOne({ id: sensor.id });
+  
+  await updateWatcher(req, sensor, timestamp);
 
   if (!watcher) return res.json({ result: 'no watcher found' });
   if (!shouldProduceNewPollingEvent(watcher, timestamp)) return res.json({ result: 'no need to generate event' });
 
-  const event = updateEvent(req, 'polling', sensor, timestamp);
+  const event = await updateEvent(req, 'polling', sensor, timestamp);
 
   res.json(event);
 }
