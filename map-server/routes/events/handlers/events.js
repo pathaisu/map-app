@@ -31,7 +31,7 @@ export const alarmSignalHandler = async (req, res) => {
 
   await updateWatcher(req, sensor, timestamp);
 
-  const event = await alarmEventProducer(req, 'alarm', sensor, timestamp);
+  const event = await alarmEventProducer(req, sensor, timestamp);
 
   res.json(event);
 }
