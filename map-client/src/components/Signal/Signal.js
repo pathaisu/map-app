@@ -6,7 +6,7 @@ const Signal = (props) => {
   const displayLevel = [];
 
   Array.from({ length: 5 }, (_, i) => {
-    displayLevel.push(i < compareLevel);
+    return displayLevel.push(i < compareLevel);
   });
 
   return (

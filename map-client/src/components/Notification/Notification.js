@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import toDate from 'date-fns/toDate';
-import Battery from '../components/Battery';
-import Signal from '../components/Signal';
-import { setResolveEvent } from '../apis/httpRequest';
+import Battery from '../Battery';
+import Signal from '../Signal';
+import { setResolveEvent } from '../../apis/httpRequest';
 
 const MainContainer = styled.div`
   display: flex;
