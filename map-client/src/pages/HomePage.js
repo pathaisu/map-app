@@ -19,7 +19,7 @@ const Wrapper = styled.div`
   border-radius: 25px;
 `;
 
-function HomePage(props) {
+const HomePage = () => {
   return (
     <Container>
       <Wrapper>
@@ -49,7 +49,7 @@ function HomePage(props) {
         </div>
       </Wrapper>
     </Container>
-  )
+  );
 }
 
 export default HomePage;

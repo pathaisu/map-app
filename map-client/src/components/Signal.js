@@ -1,7 +1,7 @@
 import React from 'react';
 import './Signal.scss';
 
-function Signal(props) {
+const Signal = (props) => {
   const level = Math.floor(props.level);
   const displayLevel = [];
 

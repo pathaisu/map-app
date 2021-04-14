@@ -106,7 +106,7 @@ const reducer = (acc, cur) => {
   return acc;
 };
 
-function Notification(props) {
+const Notification = (props) => {
   const [alarmNotifications, setAlarmNotifications] = useState([]);
   const [pollingNotifications, setPollingNotifications] = useState([]);
 

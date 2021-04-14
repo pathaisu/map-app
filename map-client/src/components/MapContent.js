@@ -1,60 +1,64 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Map, TileLayer, Marker } from 'react-leaflet'
 import L from 'leaflet';
 import './MapContent.scss';
 
-function MapContent(props) {
-  const state = {
+const activeIcon = L.divIcon({
+  iconSize: [30, 30],
+  className: 'active-custom-icon',
+});
+
+const inActiveIcon = L.divIcon({
+  iconSize: [30, 30],
+  className: 'inactive-custom-icon',
+});
+
+const getMapData = (sensors) => {
+  const mapData = {
     // Default lat, lang at Chiang mai
     lat: 19.769025,
     lng: 98.949914,
     zoom: 13,
     nodes: [],
-  };
-
-  if (props.sensors) {
-    const { sensors } = props;
-    const gw = sensors.filter(sensor => sensor.id === 0);
-    
-    if (gw.length > 0) {
-      state.lat = gw[0].lat;
-      state.lng = gw[0].lng;
-    }
-
-    state.nodes = sensors;
   }
 
-  const activeIcon = L.divIcon({
-    iconSize: [30, 30],
-    className: 'active-custom-icon',
-  });
+  if (sensors) {
+    const gw = sensors.filter(sensor => sensor.id === 0);
+    if (gw.length > 0) {
+      const { lat, lng } = gw[0];
 
-  const inActiveIcon = L.divIcon({
-    iconSize: [30, 30],
-    className: 'inactive-custom-icon',
-  });
+      mapData.lat = lat;
+      mapData.lng = lng
+    }
 
+    mapData.nodes = sensors;
+  }
 
+  return mapData;
+} 
+
+const MapContent = (props) => {
+  const { sensors } = props;
+  const [mapData] = useState(getMapData(sensors));
+  
   return (
-    <div>
-      <Map center={[state.lat, state.lng]} zoom={state.zoom}>
-        <TileLayer
-          url='https://{s}.tile.osm.org/{z}/{x}/{y}.png'
-        />
-        { 
-          state.nodes.map((value, index) => {
-            return (
-              <Marker
-                key={index}
-                position={[value.lat, value.lng]}
-                icon={ value.active ? activeIcon : inActiveIcon }
-              >
-              </Marker>
-            )
-          }) 
-        }
-      </Map>
-    </div>
+    <Map center={[mapData.lat, mapData.lng]} zoom={mapData.zoom}>
+      <TileLayer
+        url='https://{s}.tile.osm.org/{z}/{x}/{y}.png'
+      />
+      { 
+        mapData.nodes.map((value, index) => {
+          return (
+            <Marker
+              key={index}
+              position={[value.lat, value.lng]}
+              icon={ value.active ? activeIcon : inActiveIcon }
+            >
+            </Marker>
+          )
+        }) 
+      }
+    </Map>
   );
 }
 
