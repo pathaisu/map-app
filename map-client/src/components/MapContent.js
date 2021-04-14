@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Map, TileLayer, Marker } from 'react-leaflet'
 import L from 'leaflet';
 import './MapContent.scss';
@@ -13,25 +13,24 @@ const inActiveIcon = L.divIcon({
   className: 'inactive-custom-icon',
 });
 
-const getMapData = (sensors) => {
+const getMapData = (sensors = []) => {
   const mapData = {
     // Default lat, lang at Chiang mai
     lat: 19.769025,
     lng: 98.949914,
     zoom: 13,
-    nodes: [],
+    nodes: sensors,
   }
 
-  if (sensors) {
-    const gw = sensors.filter(sensor => sensor.id === 0);
-    if (gw.length > 0) {
-      const { lat, lng } = gw[0];
+  if (!sensors) return mapData;
 
-      mapData.lat = lat;
-      mapData.lng = lng
-    }
+  const gw = sensors.filter(sensor => sensor.id === 0);
+  
+  if (gw[0]) {
+    const { lat, lng } = gw[0];
 
-    mapData.nodes = sensors;
+    mapData.lat = lat;
+    mapData.lng = lng
   }
 
   return mapData;
@@ -42,21 +41,25 @@ const MapContent = (props) => {
   const [mapData] = useState(getMapData(sensors));
   
   return (
-    <Map center={[mapData.lat, mapData.lng]} zoom={mapData.zoom}>
+    <Map 
+      center={[mapData.lat, mapData.lng]}
+      zoom={mapData.zoom}
+    >
       <TileLayer
         url='https://{s}.tile.osm.org/{z}/{x}/{y}.png'
       />
       { 
         mapData.nodes.map((value, index) => {
+          const { lat, lng, active } = value;
           return (
             <Marker
               key={index}
-              position={[value.lat, value.lng]}
-              icon={ value.active ? activeIcon : inActiveIcon }
+              position={[lat, lng]}
+              icon={ active ? activeIcon : inActiveIcon }
             >
             </Marker>
-          )
-        }) 
+          );
+        })
       }
     </Map>
   );
