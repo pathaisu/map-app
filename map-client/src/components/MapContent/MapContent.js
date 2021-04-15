@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Map, TileLayer, Marker } from 'react-leaflet'
 import L from 'leaflet';
 import './MapContent.scss';
@@ -14,31 +14,28 @@ const inActiveIcon = L.divIcon({
 });
 
 const getMapData = (sensors = []) => {
-  const mapData = {
-    // Default lat, lang at Chiang mai
-    lat: 19.769025,
-    lng: 98.949914,
+  // Default lat, lang at Chiang mai
+  let lat = 19.769025;
+  let lng = 98.949914;
+
+  const [gw] = sensors.filter(sensor => sensor.id === 0);
+
+  if (gw) {
+    lat = gw.lat;
+    lng = gw.lng;
+  }
+
+  return {
+    lat,
+    lng,
     zoom: 13,
     nodes: sensors,
-  }
-
-  if (!sensors) return mapData;
-
-  const gw = sensors.filter(sensor => sensor.id === 0);
-  
-  if (gw[0]) {
-    const { lat, lng } = gw[0];
-
-    mapData.lat = lat;
-    mapData.lng = lng
-  }
-
-  return mapData;
+  };
 } 
 
 const MapContent = (props) => {
   const { sensors } = props;
-  const [mapData] = useState(getMapData(sensors));
+  const mapData = getMapData(sensors);
   
   return (
     <Map 
@@ -51,6 +48,7 @@ const MapContent = (props) => {
       { 
         mapData.nodes.map((value, index) => {
           const { lat, lng, active } = value;
+
           return (
             <Marker
               key={index}

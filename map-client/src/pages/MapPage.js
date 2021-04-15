@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 
 import MapContent from '../components/MapContent';
@@ -6,7 +6,7 @@ import Notification from '../components/Notification';
 import { getWatcher, getEvents } from '../apis/httpRequest';
 import { wsEndpoint } from '../utils/config.js';
 
-const POLLING_TIME = 300000;
+const POLLING_TIME = 6000; //30000; //process.env.REACT_APP_POLLING_TIME;
 
 const Container = styled.div`
   display: flex;
@@ -20,7 +20,6 @@ const PanelContainer = styled.div`
   width: 250px;
   border: 1px solid #E9EAEC;
   box-shadow: 1px 0 6px 0 rgba(0,0,0,.06);
-  // height: calc(100vh - 52px);
 
   @media (max-width: 920px) {
     display: none;
@@ -30,11 +29,6 @@ const PanelContainer = styled.div`
 const MapContainer = styled.div`
   display: block;
   height: 100vh;
-`;
-
-const ActivityContainer = styled.div`
-  display: block;
-  height: 300px;
 `;
 
 const setPinActiveStatus = (data) => {
@@ -55,112 +49,95 @@ const setPinInActiveStatus = (sensors, notifications) => {
   });
 }
 
-class MapPage extends Component {
-  // ws endpoint must be localhost because it's client side.
-  socket = new WebSocket(wsEndpoint);
-  state = {};
-  notifications = [];
-  queryTime = '';
-  
-  setStateAsync(state) {
-    return new Promise((resolve) => {
-      this.setState(state, resolve)
-    });
+// ws endpoint must be localhost because it's client side.
+const socket = new WebSocket(wsEndpoint);
+
+const MapPage = () => {
+  const [queryTimestamp, setQueryTimestamp] = useState(Date.now() - POLLING_TIME);
+  const [sensors, setSensors] = useState([]);
+  const [pollingEvents, setPollingEvents] = useState([]);
+  const [alarmEvents, setAlarmEvents] = useState([]);
+  const [sensorStatus, setSensorStatus] = useState({});
+
+  /** 
+   * step 1: polling config (setInterval)
+   */
+  const updateSensors = async () => {
+    const sensors = await getWatcher();
+
+    setSensors(sensors);
+  };
+
+  const updatePollingEvents = async () => {
+    const { timestamp, events } = await getEvents(queryTimestamp);
+    const newEvents = events.filter(event => event.eventType === 'polling');
+
+    setQueryTimestamp(timestamp);
+
+    if (!newEvents.length) return;
+    setPollingEvents(pollingEvents.concat(newEvents));
+    updateSensorInfo(newEvents);
   }
 
-  async pollingEvents() {
-    // when there is no available sensors on web
-    if (this.state.sensors.length === 0) {
-      const data = await getWatcher();
-      
-      this.setStateAsync({ sensors: setPinActiveStatus(data) });
-    }
+  const pollingHandler = () => {
+    updateSensors();
 
-    if (!this.queryTime) {
-      this.queryTime = Date.now() - POLLING_TIME;
-    }
-
-    const { 
-      timestamp,
-      events,
-    } = await getEvents(this.queryTime);
-
-    const timestampList = this.state.notifications.map(notification => notification.timestamp);
-    const filteredEvent = events.filter(event => {
-      return !timestampList.includes(event.timestamp);
-    });
-
-    const result = this.state.notifications.concat(filteredEvent)
-
-    const sensorResult = setPinInActiveStatus(this.state.sensors, result);
-
-    await this.setStateAsync({ sensors: sensorResult });
-    await this.setStateAsync({ notifications: result });
-    this.queryTime = timestamp;
-  }
-
-  async componentDidMount() {
-    this.socket.onmessage = async (event) => {
-      const data = [JSON.parse(event.data)];
-      const sensorResult = setPinInActiveStatus(this.state.sensors, data);
-      const result = this.state.notifications.concat(data);
-
-      await this.setStateAsync({ notifications: result });
-      await this.setStateAsync({ sensors: sensorResult });
-    }
-
-    const data = await getWatcher();
-    
-    this.setStateAsync({ sensors: setPinActiveStatus(data) });
-    this.setStateAsync({ notifications: [] });
-  
-    setInterval(() => {
-      this.pollingEvents();
+    const timer = setInterval(() => {
+      updatePollingEvents();
     }, POLLING_TIME);
+
+    // when component destroy
+    return () => clearInterval(timer);
   }
 
-  async notificationHandler(timestamps) {
-    const sensorsId = [];
+  useEffect(pollingHandler, [queryTimestamp]);
 
-    this.setStateAsync({ notifications: this.state.notifications.map(
-      notification => {
-        if (timestamps.includes(notification.timestamp)) {
-          notification.status = 'resolve';
-          sensorsId.push(notification.sensor.id);
-        }
+  /** 
+   * step 2: alarm config (websocket)
+   */
+  const alarmHandler = (event) => {
+    const newEvent = JSON.parse(event.data);
 
-        return notification;
-      })
+    setAlarmEvents(alarmEvents.concat(newEvent));
+    updateSensorInfo([newEvent]);
+  }
+
+  socket.onmessage = alarmHandler;
+
+  /**
+   * step 3: setup sensors information
+   */
+  const updateSensorInfo = (events) => {
+    const reducer = (acc, cur) => {
+      acc[cur.id] = cur;
+      return acc;
+    };
+
+    const uniqueEvents = events
+      .map(event => event.sensor)
+      .reduce(reducer, {});
+
+    setSensorStatus({
+      ...sensorStatus,
+      ...uniqueEvents,
     });
-
-    this.setStateAsync({ sensors: this.state.sensors.map(
-      sensor => {
-        if (sensorsId.includes(sensor.id)) {
-          sensor.active = true;
-        }
-
-        return sensor;
-      }
-    )})
   }
 
-  render() {
-    return (
-      <Container>
-        <PanelContainer>
-          <ActivityContainer>
-            <Notification 
-              action={this.notificationHandler.bind(this)}
-              notifications={this.state.notifications}
-            />
-          </ActivityContainer>
-        </PanelContainer>
-        <MapContainer>
-          <MapContent sensors={this.state.sensors} />
-        </MapContainer>
-      </Container>
-    )
-  }
+  return (
+    <Container>
+      <PanelContainer>
+        <Notification 
+          // action={this.notificationHandler.bind(this)}
+          sensorStatus={sensorStatus}
+          pollingEvents={pollingEvents}
+          alarmEvents={alarmEvents}
+        />
+      </PanelContainer>
+      <MapContainer>
+        <MapContent sensors={sensors} />
+      </MapContainer>
+    </Container>
+  )
 }
 
 export default MapPage;
