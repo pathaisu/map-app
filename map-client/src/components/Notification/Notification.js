@@ -4,7 +4,6 @@ import styled from 'styled-components';
 import SensorInfo from './SensorInfo';
 import NotificationInfo from './NotificationInfo';
 
-
 const ActivityContainer = styled.div`
   display: block;
   height: 300px;
