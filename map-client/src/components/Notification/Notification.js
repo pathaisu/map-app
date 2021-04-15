@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 
-import { setResolveEvent } from '../../apis/httpRequest';
-
 import SensorInfo from './SensorInfo';
 import NotificationInfo from './NotificationInfo';
 
@@ -11,7 +9,6 @@ const ActivityContainer = styled.div`
   display: block;
   height: 300px;
 `;
-
 
 const pollingItemStyle = {
   color: '#FF5E13',
@@ -24,7 +21,12 @@ const alarmItemStyle = {
 }
 
 const Notification = (props) => {
-  const { pollingEvents, alarmEvents, sensorStatus } = props;
+  const { 
+    pollingEvents, 
+    alarmEvents, 
+    sensorStatus,
+    onResolvedClick, 
+  } = props;
 
   const [alarmNotifications, setAlarmNotifications] = useState([]);
   const [pollingNotifications, setPollingNotifications] = useState([]);
@@ -42,18 +44,21 @@ const Notification = (props) => {
   const notificationsGenerator = (events) => {
     return [
     ...Object.values(events
-      .filter(notification => notification.status === 'not_resolve')
+      .filter(event => event.status === 'not_resolve')
       .reduce(reducer, {}))
     ];
   }
 
-  useEffect(() => {
+  const updateAlarmEvents = () => {
     if (alarmEvents) setAlarmNotifications(notificationsGenerator(alarmEvents));
-  }, [alarmEvents]);
+  }
 
-  useEffect(() => {
+  const updatePollingEvents = () => {
     if (pollingEvents) setPollingNotifications(notificationsGenerator(pollingEvents));
-  }, [pollingEvents]);
+  }
+
+  useEffect(updateAlarmEvents, [alarmEvents]);
+  useEffect(updatePollingEvents, [pollingEvents]);
 
   return (
     <ActivityContainer>
@@ -62,11 +67,13 @@ const Notification = (props) => {
         title={'สถานะ (โดนบุกรุก)'}
         notifications={alarmNotifications} 
         itemStyle={alarmItemStyle}
+        onResolvedClick={onResolvedClick}
       />
       <NotificationInfo         
         title={'สถานะ (ขาดการติดต่อ)'}
         notifications={pollingNotifications} 
         itemStyle={pollingItemStyle}
+        onResolvedClick={onResolvedClick}
       />
     </ActivityContainer>
   );

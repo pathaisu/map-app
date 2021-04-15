@@ -3,10 +3,12 @@ import styled from 'styled-components';
 
 import MapContent from '../components/MapContent';
 import Notification from '../components/Notification';
-import { getWatcher, getEvents } from '../apis/httpRequest';
+import { getWatcher, getEvents, setResolveEvent } from '../apis/httpRequest';
 import { wsEndpoint } from '../utils/config.js';
 
-const POLLING_TIME = 6000; //30000; //process.env.REACT_APP_POLLING_TIME;
+const POLLING_TIME = 30000; //process.env.REACT_APP_POLLING_TIME;
+const POLLING_TYPE = 'polling';
+const ALARM_TYPE = 'alarm';
 
 const Container = styled.div`
   display: flex;
@@ -30,24 +32,6 @@ const MapContainer = styled.div`
   display: block;
   height: 100vh;
 `;
-
-const setPinActiveStatus = (data) => {
-  return data.map(sensor => {
-    sensor.active = true;
-    return sensor;
-  });
-}
-
-const setPinInActiveStatus = (sensors, notifications) => {
-  const sensorIds = notifications.map(notification => {
-    return notification.sensor.id;
-  });
-
-  return sensors.map(sensor => {
-    if (sensorIds.includes(sensor.id)) sensor.active = false;
-    return sensor;
-  });
-}
 
 // ws endpoint must be localhost because it's client side.
 const socket = new WebSocket(wsEndpoint);
@@ -123,14 +107,51 @@ const MapPage = () => {
     });
   }
 
+  /**
+   * step 4: resolved sensor status
+   */
+  const resolvedEvents = async (events) => {
+    const resolvedEvents = events
+      .map(event => {
+        if (event._id) delete event._id;
+        event.status = 'resolve';
+
+        return event;
+      });
+
+    await setResolveEvent(resolvedEvents);
+  }
+
+  const resolvedHandler = (sensorId, eventType) => {
+    const activeFilter = event => event.sensor.id === sensorId;
+    const inActiveFilter = event => event.sensor.id !== sensorId;
+
+    if (eventType === ALARM_TYPE) {
+      setAlarmEvents(alarmEvents.filter(inActiveFilter));
+      resolvedEvents(alarmEvents.filter(activeFilter));
+    }
+
+    if (eventType === POLLING_TYPE) {
+      setPollingEvents(pollingEvents.filter(inActiveFilter));
+      resolvedEvents(pollingEvents.filter(activeFilter));
+    }
+
+    const resolvedSensors = sensors.map(sensor => {
+      if (sensorId === sensor.id) sensor.active = true;
+      return sensor;
+    });
+
+    setSensors(resolvedSensors);
+  }
+
   return (
     <Container>
       <PanelContainer>
         <Notification 
-          // action={this.notificationHandler.bind(this)}
           sensorStatus={sensorStatus}
           pollingEvents={pollingEvents}
           alarmEvents={alarmEvents}
+          onResolvedClick={resolvedHandler}
         />
       </PanelContainer>
       <MapContainer>

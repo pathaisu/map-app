@@ -1,7 +1,6 @@
 import React from 'react';
 import toDate from 'date-fns/toDate';
 
-
 import {   
   Title,
   ItemsContainer,
@@ -12,10 +11,10 @@ import {
   ResolveButton,
 } from './Components';
 
-const NotificationItem = (notifications, itemStyle) => {
+const NotificationItem = (notifications, itemStyle, onResolvedClick) => {
   return notifications.map((value, index) => {
     const sensorId = value[0].sensor.id;
-    const timestamps = value.map(sensor => sensor.timestamp);
+    const eventType = value[0].eventType;
 
     const title = sensorId === 0 ? 'Gateway' : `Sensor หมายเลข: ${sensorId}`;
     const divider = (notifications.length - 1) > index && <Divider></Divider>;
@@ -36,7 +35,7 @@ const NotificationItem = (notifications, itemStyle) => {
         <ItemTitleWrapper>จำนวนครั้งที่พบปัญหา: { value.length } ครั้ง</ItemTitleWrapper>
         { subItemList }
         <ResolveButton 
-          onClick={() => timestamps}
+          onClick={() => onResolvedClick(sensorId, eventType)}
         >
           ทำการตรวจสอบ
         </ResolveButton>
@@ -47,9 +46,14 @@ const NotificationItem = (notifications, itemStyle) => {
 };
 
 const NotificationInfo = (props) => {
-  const { notifications, itemStyle, title } = props;
+  const { 
+    title,
+    itemStyle, 
+    notifications, 
+    onResolvedClick,
+  } = props;
 
-  const itemList = NotificationItem(notifications, itemStyle);
+  const itemList = NotificationItem(notifications, itemStyle, onResolvedClick);
 
   return (
     <ErrorContainer>
