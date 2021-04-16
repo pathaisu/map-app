@@ -47,7 +47,7 @@ const MapContent = (props) => {
       />
       { 
         mapData.nodes.map((value, index) => {
-          const { lat, lng, active } = value;
+          const { lat, lng, active = true } = value;
 
           return (
             <Marker

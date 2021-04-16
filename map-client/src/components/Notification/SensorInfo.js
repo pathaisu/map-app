@@ -33,11 +33,11 @@ const SensorInfo = (props) => {
       uls = 0,
     } = sensor;
 
-    const title = index === 0 ? 'Gateway' : `Sensor หมายเลข: ${id}`;
+    const title = id === 0 ? 'Gateway' : `Sensor หมายเลข: ${id}`;
     const divider = (sensorList.length - 1) > index && <Divider />;
   
     return (
-      <ItemContainer key={index}>
+      <ItemContainer key={id}>
         <ItemTitleWrapper style={{ color: '#000' }}>{ title }</ItemTitleWrapper>
         <SensorStatusWrapper style={{ color: '#000' }}>
           BAT: <Battery power={soc}></Battery>
