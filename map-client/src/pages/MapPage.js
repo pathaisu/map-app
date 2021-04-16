@@ -33,16 +33,21 @@ const MapContainer = styled.div`
   height: 100vh;
 `;
 
+const reducer = (acc, cur) => {
+  acc[cur.id] = cur;
+  return acc;
+};
+
 // ws endpoint must be localhost because it's client side.
 const socket = new WebSocket(wsEndpoint);
-let intervalSensors;
 
 const MapPage = () => {
   const [queryTimestamp, setQueryTimestamp] = useState(Date.now() - POLLING_TIME);
-  const [sensors, setSensors] = useState([]);
+  const [sensors, setSensors] = useState({});
+  const [sensorActive, setSensorActive] = useState({});
+  const [sensorStatus, setSensorStatus] = useState({});
   const [pollingEvents, setPollingEvents] = useState([]);
   const [alarmEvents, setAlarmEvents] = useState([]);
-  const [sensorStatus, setSensorStatus] = useState({});
 
   /**
    * step 1: resolved sensor status
@@ -73,41 +78,33 @@ const MapPage = () => {
       resolvedEvents(pollingEvents.filter(activeFilter));
     }
 
-    const resolvedSensors = sensors.map(sensor => {
-      if (sensorId === sensor.id) sensor.active = true;
-      return sensor;
+    setSensorActive({ 
+      ...sensorActive,
+      [sensorId]: true,
     });
-
-    setSensors(resolvedSensors);
   }
 
   /**
    * step 2: setup sensors information
    */
-  const updateActiveStatus = async (events, status) => {
+  const updateSensors = async () => {
     const updatedSensors = await getWatcher();
+    setSensors(updatedSensors.reduce(reducer, {}));
+  };
 
-    const updateSensorList = events.map(event => {
-      return event.sensor.id;
-    });
+  const updateSensorActive = async (events, status) => {
+    const newStatus = events.reduce((acc, cur) => {
+      acc[cur.sensor.id] = status;
+      return acc;
+    }, {});
 
-    return updatedSensors.map(sensor => {
-      sensor.active = intervalSensors
-        .filter(item => item.id === sensor.id)
-        .map(item => item.active)[0];
-
-      if (updateSensorList.includes(sensor.id)) sensor.active = status;
-
-      return sensor;
+    setSensorActive({
+      ...sensorActive,
+      ...newStatus,
     });
   }
 
   const updateSensorInfo = (events) => {
-    const reducer = (acc, cur) => {
-      acc[cur.id] = cur;
-      return acc;
-    };
-
     const uniqueEvents = events
       .map(event => event.sensor)
       .reduce(reducer, {});
@@ -125,12 +122,9 @@ const MapPage = () => {
     const newEvent = JSON.parse(event.data);
 
     setAlarmEvents(alarmEvents.concat(newEvent));
+    updateSensorActive([newEvent], false);
     updateSensorInfo([newEvent]);
-    
-    const updatedSensors = await updateActiveStatus([newEvent], false);
-    
-    intervalSensors = updatedSensors;
-    setSensors(updatedSensors);
+    updateSensors();
   }
 
   socket.onmessage = alarmHandler;
@@ -138,12 +132,7 @@ const MapPage = () => {
   /** 
    * step 4: polling config (setInterval)
    */
-  const updateSensors = async () => {
-    const updatedSensors = await getWatcher();
-    setSensors(updatedSensors);
-  };
 
-  // something wrong here
   const updatePollingEvents = async () => {
     const { timestamp, events } = await getEvents(queryTimestamp);
     const newEvents = events.filter(event => event.eventType === POLLING_TYPE);
@@ -153,12 +142,9 @@ const MapPage = () => {
     if (!newEvents.length) return;
 
     setPollingEvents(pollingEvents.concat(newEvents));
+    updateSensorActive(newEvents, false);
     updateSensorInfo(newEvents);
-    
-    const updatedSensors = await updateActiveStatus(newEvents, false);
-    
-    intervalSensors = updatedSensors;
-    setSensors(updatedSensors);
+    updateSensors();
   }
 
   const pollingHandler = () => {
@@ -171,12 +157,12 @@ const MapPage = () => {
   }
 
   const initHandler = () => {
-    if (!sensors.length) updateSensors();
-    intervalSensors = sensors;
+    if (!Object.keys(sensors).length) updateSensors();
   }
 
   useEffect(pollingHandler, [queryTimestamp]);
   useEffect(initHandler, [sensors]);
+  // useEffect(() => { console.log(sensorActive); }, [sensorActive]);
 
   return (
     <Container>
@@ -189,7 +175,7 @@ const MapPage = () => {
         />
       </PanelContainer>
       <MapContainer>
-        <MapContent sensors={sensors} />
+        <MapContent sensors={sensors} sensorActive={sensorActive} />
       </MapContainer>
     </Container>
   )

@@ -13,12 +13,12 @@ const inActiveIcon = L.divIcon({
   className: 'inactive-custom-icon',
 });
 
-const getMapData = (sensors = []) => {
+const getMapData = (sensors) => {
   // Default lat, lang at Chiang mai
   let lat = 19.769025;
   let lng = 98.949914;
 
-  const [gw] = sensors.filter(sensor => sensor.id === 0);
+  const gw = sensors[0];
 
   if (gw) {
     lat = gw.lat;
@@ -29,12 +29,12 @@ const getMapData = (sensors = []) => {
     lat,
     lng,
     zoom: 13,
-    nodes: sensors,
+    nodes: Object.values(sensors),
   };
 } 
 
 const MapContent = (props) => {
-  const { sensors } = props;
+  const { sensors, sensorActive } = props;
   const mapData = getMapData(sensors);
   
   return (
@@ -47,8 +47,9 @@ const MapContent = (props) => {
       />
       { 
         mapData.nodes.map((value, index) => {
-          const { lat, lng, active = true } = value;
-
+          const { lat, lng } = value;
+          const active = typeof sensorActive[value.id] === 'undefined' ? true : sensorActive[value.id];
+          
           return (
             <Marker
               key={index}
