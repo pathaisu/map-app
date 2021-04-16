@@ -35,6 +35,7 @@ const MapContainer = styled.div`
 
 // ws endpoint must be localhost because it's client side.
 const socket = new WebSocket(wsEndpoint);
+let intervalSensors;
 
 const MapPage = () => {
   const [queryTimestamp, setQueryTimestamp] = useState(Date.now() - POLLING_TIME);
@@ -43,72 +44,8 @@ const MapPage = () => {
   const [alarmEvents, setAlarmEvents] = useState([]);
   const [sensorStatus, setSensorStatus] = useState({});
 
-  /** 
-   * step 1: polling config (setInterval)
-   */
-  const updateSensors = async () => {
-    const sensors = await getWatcher();
-
-    setSensors(sensors);
-  };
-
-  const updatePollingEvents = async () => {
-    const { timestamp, events } = await getEvents(queryTimestamp);
-    const newEvents = events.filter(event => event.eventType === 'polling');
-
-    setQueryTimestamp(timestamp);
-
-    if (!newEvents.length) return;
-    setPollingEvents(pollingEvents.concat(newEvents));
-    updateSensorInfo(newEvents);
-  }
-
-  const pollingHandler = () => {
-    updateSensors();
-
-    const timer = setInterval(() => {
-      updatePollingEvents();
-    }, POLLING_TIME);
-
-    // when component destroy
-    return () => clearInterval(timer);
-  }
-
-  useEffect(pollingHandler, [queryTimestamp]);
-
-  /** 
-   * step 2: alarm config (websocket)
-   */
-  const alarmHandler = (event) => {
-    const newEvent = JSON.parse(event.data);
-
-    setAlarmEvents(alarmEvents.concat(newEvent));
-    updateSensorInfo([newEvent]);
-  }
-
-  socket.onmessage = alarmHandler;
-
   /**
-   * step 3: setup sensors information
-   */
-  const updateSensorInfo = (events) => {
-    const reducer = (acc, cur) => {
-      acc[cur.id] = cur;
-      return acc;
-    };
-
-    const uniqueEvents = events
-      .map(event => event.sensor)
-      .reduce(reducer, {});
-
-    setSensorStatus({
-      ...sensorStatus,
-      ...uniqueEvents,
-    });
-  }
-
-  /**
-   * step 4: resolved sensor status
+   * step 1: resolved sensor status
    */
   const resolvedEvents = async (events) => {
     const resolvedEvents = events
@@ -143,6 +80,103 @@ const MapPage = () => {
 
     setSensors(resolvedSensors);
   }
+
+  /**
+   * step 2: setup sensors information
+   */
+  const updateActiveStatus = async (events, status) => {
+    const updatedSensors = await getWatcher();
+
+    const updateSensorList = events.map(event => {
+      return event.sensor.id;
+    });
+
+    return updatedSensors.map(sensor => {
+      sensor.active = intervalSensors
+        .filter(item => item.id === sensor.id)
+        .map(item => item.active)[0];
+
+      if (updateSensorList.includes(sensor.id)) sensor.active = status;
+
+      return sensor;
+    });
+  }
+
+  const updateSensorInfo = (events) => {
+    const reducer = (acc, cur) => {
+      acc[cur.id] = cur;
+      return acc;
+    };
+
+    const uniqueEvents = events
+      .map(event => event.sensor)
+      .reduce(reducer, {});
+
+    setSensorStatus({
+      ...sensorStatus,
+      ...uniqueEvents,
+    });
+  }
+
+  /** 
+   * step 3: alarm config (websocket)
+   */
+  const alarmHandler = async (event) => {
+    const newEvent = JSON.parse(event.data);
+
+    setAlarmEvents(alarmEvents.concat(newEvent));
+    updateSensorInfo([newEvent]);
+    
+    const updatedSensors = await updateActiveStatus([newEvent], false);
+    
+    intervalSensors = updatedSensors;
+    setSensors(updatedSensors);
+  }
+
+  socket.onmessage = alarmHandler;
+
+  /** 
+   * step 4: polling config (setInterval)
+   */
+  const updateSensors = async () => {
+    const updatedSensors = await getWatcher();
+    setSensors(updatedSensors);
+  };
+
+  // something wrong here
+  const updatePollingEvents = async () => {
+    const { timestamp, events } = await getEvents(queryTimestamp);
+    const newEvents = events.filter(event => event.eventType === POLLING_TYPE);
+
+    setQueryTimestamp(timestamp);
+
+    if (!newEvents.length) return;
+
+    setPollingEvents(pollingEvents.concat(newEvents));
+    updateSensorInfo(newEvents);
+    
+    const updatedSensors = await updateActiveStatus(newEvents, false);
+    
+    intervalSensors = updatedSensors;
+    setSensors(updatedSensors);
+  }
+
+  const pollingHandler = () => {
+    const timer = setInterval(() => {
+      updatePollingEvents();
+    }, POLLING_TIME);
+
+    // when component destroy
+    return () => clearInterval(timer);
+  }
+
+  const initHandler = () => {
+    if (!sensors.length) updateSensors();
+    intervalSensors = sensors;
+  }
+
+  useEffect(pollingHandler, [queryTimestamp]);
+  useEffect(initHandler, [sensors]);
 
   return (
     <Container>
