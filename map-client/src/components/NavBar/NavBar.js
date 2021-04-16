@@ -34,7 +34,7 @@ const Profile = styled.div`
   border-radius: 50%;
 `;
 
-function NavBar() {
+const NavBar = () => {
   return (
     <Container className="navbar">
       <NavBrand onClick={handleClick}>
