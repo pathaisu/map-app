@@ -67,7 +67,7 @@ const onConnectHandler = async () => {
   const topic = process.argv[2];
 
 	try {
-    const message = JSON.stringify(data[1]);
+    const message = JSON.stringify(data[2]);
 
     await client.publish(topic, message);    
     await client.end();
