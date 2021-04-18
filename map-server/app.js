@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+
 import { setRoutes } from './routes/index.js';
 import { setMongo } from './mongo/setup.js';
 import { appLogger } from './utils/logger.js';

@@ -3,6 +3,8 @@ services:
   # Web client
   website:
     build: ./map-client
+    volumes:
+      - ./map-client:/usr/src/app
     working_dir: /usr/src/app
     ports:
       - 3001:3000
@@ -17,6 +19,8 @@ services:
   # CRON
   cron:
     build: ./map-cron-job
+    volumes:
+      - ./map-cron-job:/usr/src/app
     ports:
       - "3004:3004"
     links:
@@ -31,6 +35,8 @@ services:
   # MQTT
   mqtt:
     build: ./map-mqtt
+    # volumes:
+    #   - ./map-mqtt:/usr/src/app
     ports:
       - "3003:3003"
     links:
@@ -46,6 +52,8 @@ services:
   # API
   api:
     build: ./map-server
+    volumes:
+      - ./map-server:/usr/src/app
     ports:
       - "3002:3002"
     links:

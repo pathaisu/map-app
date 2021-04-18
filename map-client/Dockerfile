@@ -1,9 +1,9 @@
 FROM node:14
 
 WORKDIR /usr/src/app
-ADD . /usr/src/app
-RUN npm i
-RUN npm rebuild node-sass
+COPY package.json .
+RUN npm install
+COPY . .
 
 EXPOSE 3000
 

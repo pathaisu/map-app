@@ -63,3 +63,7 @@ use :db_name
   },
 }
 ```
+
+```sh
+docker-compose -p map-app -f docker-compose.local.yml up --build --exit-code-from map-app
+```
