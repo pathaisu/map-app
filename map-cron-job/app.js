@@ -1,4 +1,5 @@
 import cron from 'cron';
+import { appLogger } from './utils/logger.js';
 import { getEvents } from './apis/httpRequest.js';
 
 const POLLING_TIME = process.env.POLLING_TIME;
@@ -6,7 +7,7 @@ const POLLING_TIME = process.env.POLLING_TIME;
 let queryTime = `${Date.now() - POLLING_TIME}`;
 
 const cb = async () => {
-  console.log(`You will see this message every ${POLLING_TIME/1000}`);
+  appLogger.info(`Polling every ${POLLING_TIME/1000} sec`);
 
   const { timestamp } = await getEvents(queryTime);
   queryTime = timestamp;

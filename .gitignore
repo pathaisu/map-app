@@ -20,6 +20,7 @@
 
 # Corn Job
 /map-cron-job/node_modules
+/map-cron-job/log
 
 # etc
 .vscode
